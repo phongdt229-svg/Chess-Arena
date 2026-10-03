@@ -98,16 +98,16 @@ function negamax(
   }
 
   // Sort moves: captures first, promotions first
-  moves.sort((a, b) => {
-    const aScore = b.captured ? PIECE_VALUES[b.captured] : 0 + (b.promotion ? 1000 : 0);
-    const bScore = a.captured ? PIECE_VALUES[a.captured] : 0 + (a.promotion ? 1000 : 0);
+  moves.sort((a: any, b: any) => {
+    const aScore = (b.captured ? PIECE_VALUES[b.captured] : 0) + (b.promotion ? 1000 : 0);
+    const bScore = (a.captured ? PIECE_VALUES[a.captured] : 0) + (a.promotion ? 1000 : 0);
     return aScore - bScore;
   });
 
   let maxEval = -Infinity;
 
   for (const move of moves) {
-    chess.move(move);
+    chess.move(move as any);
     const evaluation = -negamax(chess, depth - 1, -beta, -alpha, !isMaximizing, startTime, timeLimit);
     chess.undo();
 
@@ -130,7 +130,7 @@ export function findBestMove(fen: string, options: EngineOptions): string {
   const timeLimit = options.timeMs || 1000;
 
   // Score each move
-  const scoredMoves = moves.map((move) => {
+  const scoredMoves = moves.map((move: any) => {
     chess.move(move);
     const score = -negamax(chess, options.depth - 1, -Infinity, Infinity, false, startTime, timeLimit);
     chess.undo();
@@ -140,14 +140,14 @@ export function findBestMove(fen: string, options: EngineOptions): string {
   // Handle randomness
   if (options.randomness > 0 && Math.random() < options.randomness / 100) {
     // Play random move among top moves
-    const sorted = scoredMoves.sort((a, b) => b.score - a.score);
+    const sorted = scoredMoves.sort((a: any, b: any) => b.score - a.score);
     const threshold = sorted[0].score - 100; // Within 1 pawn
-    const suboptimalMoves = sorted.filter((m) => m.score >= threshold);
+    const suboptimalMoves = sorted.filter((m: any) => m.score >= threshold);
     const random = suboptimalMoves[Math.floor(Math.random() * suboptimalMoves.length)];
     return `${random.move.from}${random.move.to}${random.move.promotion || ''}`;
   }
 
   // Play best move
-  const best = scoredMoves.reduce((a, b) => (a.score > b.score ? a : b));
+  const best = scoredMoves.reduce((a: any, b: any) => (a.score > b.score ? a : b));
   return `${best.move.from}${best.move.to}${best.move.promotion || ''}`;
 }

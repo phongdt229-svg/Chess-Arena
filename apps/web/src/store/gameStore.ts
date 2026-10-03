@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { GameEngine } from '@chess-arena/chess-core';
 import type { Move, GameResult, Color, Piece } from '@chess-arena/chess-core';
+import * as aiClient from '../ai/aiClient';
 
 interface GameState {
   fen: string;
@@ -17,10 +18,14 @@ interface GameState {
   orientation: Color;
   viewMode: '2d' | '3d';
   gameMode: 'local' | 'ai';
+  playerColor: Color;
+  aiLevel: number;
+  aiThinking: boolean;
+  lastOptions: { mode: 'local' | 'ai'; playerColor?: Color; aiLevel?: number } | null;
 }
 
 interface GameActions extends GameState {
-  newGame: (options?: { mode?: 'local' | 'ai'; aiLevel?: number }) => void;
+  newGame: (options?: { mode?: 'local' | 'ai'; playerColor?: Color; aiLevel?: number }) => void;
   clickSquare: (sq: number) => void;
   tryMove: (from: number, to: number, promotion?: string) => void;
   choosePromotion: (promotion: 'q' | 'r' | 'b' | 'n') => void;
@@ -32,9 +37,11 @@ interface GameActions extends GameState {
   loadFEN: (fen: string) => void;
   resign: () => void;
   offerDraw: () => void;
+  maybeAiMove: () => Promise<void>;
 }
 
 let engine: GameEngine | null = null;
+let aiRequestId = 0;
 
 const createInitialState = (): GameState => ({
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -51,6 +58,10 @@ const createInitialState = (): GameState => ({
   orientation: 'w',
   viewMode: '2d',
   gameMode: 'local',
+  playerColor: 'w',
+  aiLevel: 3,
+  aiThinking: false,
+  lastOptions: null,
 });
 
 const syncState = (state: GameState, eng: GameEngine): Partial<GameState> => {
@@ -73,19 +84,40 @@ export const useGameStore = create<GameActions>((set, get) => ({
   ...createInitialState(),
 
   newGame: (options = {}) => {
-    const { mode = 'local' } = options;
+    const { mode = 'local', playerColor = 'w', aiLevel = 3 } = options;
+    aiRequestId++;
+    aiClient.cancel();
+
     engine = GameEngine.create();
     const state = createInitialState();
-    set({
+    const newState = {
       ...state,
       ...syncState(state, engine),
       gameMode: mode,
-    });
+      playerColor: playerColor,
+      aiLevel: aiLevel,
+      orientation: playerColor,
+      lastOptions: { mode, playerColor, aiLevel },
+    };
+    set(newState);
+
+    // AI moves first if in AI mode and AI is white
+    if (mode === 'ai' && playerColor === 'b') {
+      setTimeout(() => {
+        const st = get();
+        if (st.gameMode === 'ai' && !st.result || (st.result && st.result.status === 'ongoing')) {
+          get().maybeAiMove?.();
+        }
+      }, 500);
+    }
   },
 
   clickSquare: (sq) => {
     const state = get();
-    if (!engine || state.pendingPromotion) return;
+    if (!engine || state.pendingPromotion || state.aiThinking) return;
+
+    // In AI mode, only allow moves by the player
+    if (state.gameMode === 'ai' && engine.getCurrentTurn() !== state.playerColor) return;
 
     const { selectedSquare, legalMoves } = state;
 
@@ -130,6 +162,14 @@ export const useGameStore = create<GameActions>((set, get) => ({
       legalMoves: [],
       redoStack: [],
     });
+
+    // Trigger AI move if in AI mode
+    setTimeout(() => {
+      const st = get();
+      if (st.gameMode === 'ai' && (!st.result || st.result.status === 'ongoing')) {
+        get().maybeAiMove?.();
+      }
+    }, 300);
   },
 
   choosePromotion: (promotion) => {
@@ -148,6 +188,9 @@ export const useGameStore = create<GameActions>((set, get) => ({
   undo: () => {
     if (!engine) return;
 
+    aiRequestId++;
+    aiClient.cancel();
+
     const move = engine.undo();
     if (!move) return;
 
@@ -159,12 +202,16 @@ export const useGameStore = create<GameActions>((set, get) => ({
       selectedSquare: null,
       legalMoves: [],
       redoStack: [move, ...state.redoStack],
+      aiThinking: false,
     });
   },
 
   redo: () => {
     const state = get();
     if (!engine || state.redoStack.length === 0) return;
+
+    aiRequestId++;
+    aiClient.cancel();
 
     const move = state.redoStack[0];
     const uci = `${indexToSquare(move.from)}${indexToSquare(move.to)}${move.promotion || ''}`;
@@ -175,6 +222,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
       lastMoveFrom: move.from,
       lastMoveTo: move.to,
       redoStack: state.redoStack.slice(1),
+      aiThinking: false,
     });
   },
 
@@ -190,11 +238,15 @@ export const useGameStore = create<GameActions>((set, get) => ({
   loadFEN: (fen) => {
     if (!engine) return;
 
+    aiRequestId++;
+    aiClient.cancel();
+
     engine.loadFEN(fen);
     const state = createInitialState();
     set({
       ...state,
       ...syncState(state, engine),
+      aiThinking: false,
     });
   },
 
@@ -209,6 +261,42 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   offerDraw: () => {
     set({ result: { status: 'draw', reason: 'agreement' } });
+  },
+
+  maybeAiMove: async () => {
+    const state = get();
+    if (!engine || state.gameMode !== 'ai' || state.result.status !== 'ongoing' || state.aiThinking) return;
+
+    const turn = engine.getCurrentTurn();
+    if (turn === state.playerColor) return; // It's player's turn
+
+    set({ aiThinking: true });
+    const currentRequestId = ++aiRequestId;
+
+    try {
+      const uci = await aiClient.requestMove(engine.getFEN(), state.aiLevel);
+      if (!uci || currentRequestId !== aiRequestId) return; // Request was cancelled or superseded
+
+      if (!engine) return;
+      const move = engine.makeMove(uci);
+      if (!move) {
+        set({ aiThinking: false });
+        return;
+      }
+
+      set({
+        ...syncState(state, engine),
+        lastMoveFrom: move.from,
+        lastMoveTo: move.to,
+        selectedSquare: null,
+        legalMoves: [],
+        redoStack: [],
+        aiThinking: false,
+      });
+    } catch (err) {
+      console.error('AI move failed:', err);
+      set({ aiThinking: false });
+    }
   },
 }));
 
