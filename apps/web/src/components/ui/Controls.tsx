@@ -4,7 +4,7 @@ import GameStatus from './GameStatus';
 import './Controls.css';
 
 export default function Controls() {
-  const { undo, redo, flipBoard, newGame, history } = useGameStore();
+  const { undo, redo, flipBoard, newGame, history, redoStack } = useGameStore();
 
   return (
     <div className="controls">
@@ -14,7 +14,7 @@ export default function Controls() {
         <button className="btn-block btn-secondary" onClick={undo} disabled={history.length === 0}>
           ↶ Undo
         </button>
-        <button className="btn-block btn-secondary" onClick={redo} disabled={true}>
+        <button className="btn-block btn-secondary" onClick={redo} disabled={redoStack.length === 0}>
           ↷ Redo
         </button>
         <button className="btn-block btn-secondary" onClick={flipBoard}>

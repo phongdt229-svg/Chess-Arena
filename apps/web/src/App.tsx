@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import Board2D from './components/board2d/Board2D';
 import Controls from './components/ui/Controls';
+import GameOverModal from './components/ui/GameOverModal';
 import { useGameStore } from './store/gameStore';
 import './App.css';
+
+const Board3D = lazy(() => import('./components/board3d/Board3D'));
 
 function App() {
   const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
@@ -43,11 +46,9 @@ function App() {
         <div className="board-container">
           {viewMode === '2d' && <Board2D />}
           {viewMode === '3d' && (
-            <div className="placeholder-3d">
-              <p>3D board will be implemented in Giai đoạn 3</p>
-              <p>Currently showing 2D mode</p>
-              <button onClick={() => setViewMode('2d')}>Back to 2D</button>
-            </div>
+            <Suspense fallback={<div className="loading">Loading 3D board...</div>}>
+              <Board3D />
+            </Suspense>
           )}
         </div>
 
@@ -55,6 +56,8 @@ function App() {
           <Controls />
         </aside>
       </main>
+
+      <GameOverModal />
     </div>
   );
 }
