@@ -20,6 +20,7 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   const isAnimating = useRef(lastMoveFrom === square ? true : false);
 
   const coords = squareToWorld(square);
+  const rotationRef = useRef(0);
 
   const geometry = useMemo(() => getPieceGeometry(piece.type), [piece.type]);
   const material = useMemo(() => getPieceMaterial(piece.color), [piece.color]);
@@ -36,7 +37,7 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   useFrame(() => {
     if (!meshRef.current || !isAnimating.current) return;
 
-    animProgress.current += 0.05;
+    animProgress.current += 0.06;
 
     if (animProgress.current >= 1) {
       animProgress.current = 1;
@@ -44,15 +45,19 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
     }
 
     const progress = animProgress.current;
-    // Ease-out cubic
-    const eased = 1 - Math.pow(1 - progress, 3);
-    // Parabol arc: higher for knights
-    const heightMultiplier = piece.type === 'n' ? 1.2 : 0.6;
+    // Smooth ease-in-out for position
+    const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+    // Smooth parabolic arc: higher for knights
+    const heightMultiplier = piece.type === 'n' ? 1.3 : 0.65;
     const arc = Math.sin(progress * Math.PI) * heightMultiplier;
 
     meshRef.current.position.x = startPos.current.x + (endPos.current.x - startPos.current.x) * eased;
     meshRef.current.position.y = startPos.current.y + arc;
     meshRef.current.position.z = startPos.current.z + (endPos.current.z - startPos.current.z) * eased;
+
+    // Subtle rotation during movement
+    rotationRef.current += 0.05;
+    meshRef.current.rotation.y = Math.sin(rotationRef.current * 0.5) * 0.3;
   });
 
   // Lift up slightly if selected

@@ -40,11 +40,18 @@ function BoardScene({ quality, onResetCamera }: { quality: 'low' | 'high'; onRes
 
       {quality === 'high' && (
         <>
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 10, 7]} intensity={0.8} castShadow shadow-mapSize={[2048, 2048]} />
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[8, 12, 6]} intensity={1.0} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
+          <directionalLight position={[-5, 8, -8]} intensity={0.3} />
+          <pointLight position={[0, 6, 0]} intensity={0.2} />
         </>
       )}
-      {quality === 'low' && <ambientLight intensity={0.8} />}
+      {quality === 'low' && (
+        <>
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[5, 8, 5]} intensity={0.6} />
+        </>
+      )}
 
       {/* Board tiles */}
       {Array.from({ length: 64 }).map((_, sq) => (

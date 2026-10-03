@@ -27,12 +27,12 @@ export default function Tile3D({
   const rank = Math.floor(index / 8);
   const isDark = (file + rank) % 2 === 1;
 
-  // Determine tile color
-  let color = isDark ? 0x8b7355 : 0xf0d9b5; // Dark brown / Light tan
-  if (isInCheck) color = 0xff4444; // Red for check
-  else if (isSelected) color = 0xbaca44; // Light green for selected
-  else if (isLastMove) color = isDark ? 0xa9a664 : 0xd4c555; // Highlight last move
-  else if (isLegalTarget) color = isDark ? 0x8b7355 : 0xf0d9b5; // Normal (marker will show)
+  // Determine tile color - more refined board colors
+  let color = isDark ? 0x7a6f63 : 0xf4e8d8; // Refined brown / Light cream
+  if (isInCheck) color = 0xd84545; // Deep red for check
+  else if (isSelected) color = 0xc4d651; // Olive green for selected
+  else if (isLastMove) color = isDark ? 0x9d9968 : 0xe6d966; // Highlight last move
+  else if (isLegalTarget) color = isDark ? 0x7a6f63 : 0xf4e8d8; // Normal (marker will show)
 
   const geometry = useMemo(() => new THREE.BoxGeometry(1, 0.1, 1), []);
   const material = useMemo(
@@ -54,11 +54,11 @@ export default function Tile3D({
       castShadow
       receiveShadow
     >
-      {/* Legal target marker */}
+      {/* Legal target marker - dot in center */}
       {isLegalTarget && (
-        <mesh position={[0, 0.1, 0]}>
-          <circleGeometry args={[0.15, 8]} />
-          <meshBasicMaterial color={0xcccccc} transparent opacity={0.7} />
+        <mesh position={[0, 0.08, 0]}>
+          <cylinderGeometry args={[0.12, 0.12, 0.02, 16]} />
+          <meshStandardMaterial color={0x888888} metalness={0.4} roughness={0.3} emissive={0x555555} />
         </mesh>
       )}
     </mesh>
