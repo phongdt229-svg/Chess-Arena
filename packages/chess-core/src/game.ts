@@ -64,7 +64,8 @@ export class GameEngine {
 
   makeMove(uci: string): Move | null {
     try {
-      const move = this.chess.move(uci, { strict: true });
+      const move = this.chess.move(uci, { strict: false });
+      if (!move) return null;
       return this.convertMove(move);
     } catch {
       return null;
@@ -125,6 +126,10 @@ export class GameEngine {
     }
 
     return { status: 'ongoing' };
+  }
+
+  perft(depth: number): number {
+    return this.chess.perft(depth);
   }
 
   private convertMove(move: ChessJsMove): Move {
