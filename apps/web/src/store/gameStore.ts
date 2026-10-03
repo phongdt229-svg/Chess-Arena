@@ -1,26 +1,30 @@
 import { create } from 'zustand';
 import { GameEngine } from '@chess-arena/chess-core';
-import type { Move, GameResult, Color } from '@chess-arena/chess-core';
+import type { Move, GameResult, Color, Piece } from '@chess-arena/chess-core';
 
 interface GameState {
-  engine: GameEngine | null;
+  fen: string;
+  board: (Piece | null)[];
   selectedSquare: number | null;
   legalMoves: Move[];
-  lastMove: Move | null;
+  lastMoveFrom: number | null;
+  lastMoveTo: number | null;
+  inCheckSquare: number | null;
   pendingPromotion: { from: number; to: number } | null;
-  orientation: Color;
-  viewMode: '2d' | '3d';
-  gameMode: 'local' | 'ai';
   history: Move[];
   redoStack: Move[];
   result: GameResult;
+  orientation: Color;
+  viewMode: '2d' | '3d';
+  gameMode: 'local' | 'ai';
 }
 
-interface GameActions {
-  newGame: (options: { mode: 'local' | 'ai'; aiLevel?: number }) => void;
-  selectSquare: (sq: number) => void;
-  makeMove: (uci: string) => boolean;
+interface GameActions extends GameState {
+  newGame: (options?: { mode?: 'local' | 'ai'; aiLevel?: number }) => void;
+  clickSquare: (sq: number) => void;
+  tryMove: (from: number, to: number, promotion?: string) => void;
   choosePromotion: (promotion: 'q' | 'r' | 'b' | 'n') => void;
+  cancelPromotion: () => void;
   undo: () => void;
   redo: () => void;
   flipBoard: () => void;
@@ -28,53 +32,81 @@ interface GameActions {
   loadFEN: (fen: string) => void;
   resign: () => void;
   offerDraw: () => void;
-  gameState: GameState;
 }
 
-const INITIAL_STATE: GameState = {
-  engine: null,
+let engine: GameEngine | null = null;
+
+const createInitialState = (): GameState => ({
+  fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+  board: Array(64).fill(null),
   selectedSquare: null,
   legalMoves: [],
-  lastMove: null,
+  lastMoveFrom: null,
+  lastMoveTo: null,
+  inCheckSquare: null,
   pendingPromotion: null,
-  orientation: 'w',
-  viewMode: '2d',
-  gameMode: 'local',
   history: [],
   redoStack: [],
   result: { status: 'ongoing' },
+  orientation: 'w',
+  viewMode: '2d',
+  gameMode: 'local',
+});
+
+const syncState = (state: GameState, eng: GameEngine): Partial<GameState> => {
+  const fen = eng.getFEN();
+  const board = eng.getBoard();
+  const history = (eng.getHistory(true) as Move[]) || [];
+  const inCheck = eng.isInCheck();
+  const inCheckSq = inCheck ? eng.getKingSquare(eng.getCurrentTurn()) : null;
+
+  return {
+    fen,
+    board,
+    history,
+    inCheckSquare: inCheckSq as number | null,
+    result: eng.getGameResult(),
+  };
 };
 
 export const useGameStore = create<GameActions>((set, get) => ({
-  ...INITIAL_STATE,
+  ...createInitialState(),
 
-  newGame: (options) => {
-    const engine = GameEngine.create();
+  newGame: (options = {}) => {
+    const { mode = 'local' } = options;
+    engine = GameEngine.create();
+    const state = createInitialState();
     set({
-      engine,
-      selectedSquare: null,
-      legalMoves: [],
-      lastMove: null,
-      pendingPromotion: null,
-      orientation: 'w',
-      gameMode: options.mode,
-      history: [],
-      redoStack: [],
-      result: { status: 'ongoing' },
+      ...state,
+      ...syncState(state, engine),
+      gameMode: mode,
     });
   },
 
-  selectSquare: (sq) => {
-    const { engine, selectedSquare, pendingPromotion } = get();
-    if (!engine || pendingPromotion) return;
+  clickSquare: (sq) => {
+    const state = get();
+    if (!engine || state.pendingPromotion) return;
+
+    const { selectedSquare, legalMoves } = state;
 
     if (selectedSquare === sq) {
       set({ selectedSquare: null, legalMoves: [] });
       return;
     }
 
-    const piece = engine.legalMoves().find((m) => m.from === sq);
-    if (piece) {
+    const isLegalTarget = legalMoves.some((m) => m.to === sq);
+    if (selectedSquare !== null && isLegalTarget) {
+      const move = legalMoves.find((m) => m.to === sq);
+      if (move && move.promotion) {
+        set({ pendingPromotion: { from: selectedSquare, to: sq } });
+        return;
+      }
+      get().tryMove(selectedSquare, sq);
+      return;
+    }
+
+    const hasLegalMoves = engine.legalMoves(indexToSquare(sq)).length > 0;
+    if (hasLegalMoves) {
       const moves = engine.legalMoves(indexToSquare(sq));
       set({ selectedSquare: sq, legalMoves: moves });
     } else {
@@ -82,85 +114,73 @@ export const useGameStore = create<GameActions>((set, get) => ({
     }
   },
 
-  makeMove: (uci: string) => {
-    const { engine } = get();
-    if (!engine) return false;
+  tryMove: (from, to, promotion) => {
+    if (!engine) return;
 
+    const uci = promotion ? `${indexToSquare(from)}${indexToSquare(to)}${promotion}` : `${indexToSquare(from)}${indexToSquare(to)}`;
     const move = engine.makeMove(uci);
-    if (!move) return false;
 
-    const result = engine.getGameResult();
-    if (move.promotion) {
-      set({
-        pendingPromotion: { from: move.from, to: move.to },
-        selectedSquare: null,
-        legalMoves: [],
-      });
-      return true;
-    }
+    if (!move) return;
 
     set({
-      lastMove: move,
+      ...syncState(get(), engine),
+      lastMoveFrom: from,
+      lastMoveTo: to,
       selectedSquare: null,
       legalMoves: [],
-      result,
       redoStack: [],
     });
-    return true;
   },
 
   choosePromotion: (promotion) => {
-    const { engine, pendingPromotion } = get();
-    if (!engine || !pendingPromotion) return;
+    const state = get();
+    if (!engine || !state.pendingPromotion) return;
 
     engine.undo();
-    const uci = `${indexToSquare(pendingPromotion.from)}${indexToSquare(pendingPromotion.to)}${promotion}`;
-    const move = engine.makeMove(uci);
+    get().tryMove(state.pendingPromotion.from, state.pendingPromotion.to, promotion);
+    set({ pendingPromotion: null });
+  },
 
-    if (move) {
-      const result = engine.getGameResult();
-      set({
-        lastMove: move,
-        pendingPromotion: null,
-        result,
-        redoStack: [],
-      });
-    }
+  cancelPromotion: () => {
+    set({ pendingPromotion: null });
   },
 
   undo: () => {
-    const { engine } = get();
     if (!engine) return;
 
     const move = engine.undo();
-    if (move) {
-      set({
-        lastMove: null,
-        result: { status: 'ongoing' },
-        redoStack: [move, ...get().redoStack],
-      });
-    }
+    if (!move) return;
+
+    const state = get();
+    set({
+      ...syncState(state, engine),
+      lastMoveFrom: null,
+      lastMoveTo: null,
+      selectedSquare: null,
+      legalMoves: [],
+      redoStack: [move, ...state.redoStack],
+    });
   },
 
   redo: () => {
-    const { engine, redoStack } = get();
-    if (!engine || redoStack.length === 0) return;
+    const state = get();
+    if (!engine || state.redoStack.length === 0) return;
 
-    const move = redoStack[0];
-    const uci = `${indexToSquare(move.from)}${indexToSquare(move.to)}`;
+    const move = state.redoStack[0];
+    const uci = `${indexToSquare(move.from)}${indexToSquare(move.to)}${move.promotion || ''}`;
     engine.makeMove(uci);
 
-    const result = engine.getGameResult();
     set({
-      lastMove: move,
-      result,
-      redoStack: redoStack.slice(1),
+      ...syncState(state, engine),
+      lastMoveFrom: move.from,
+      lastMoveTo: move.to,
+      redoStack: state.redoStack.slice(1),
     });
   },
 
   flipBoard: () => {
-    const { orientation } = get();
-    set({ orientation: orientation === 'w' ? 'b' : 'w' });
+    const state = get();
+    set({ orientation: state.orientation === 'w' ? 'b' : 'w' });
   },
 
   setViewMode: (mode) => {
@@ -168,27 +188,23 @@ export const useGameStore = create<GameActions>((set, get) => ({
   },
 
   loadFEN: (fen) => {
-    const { engine } = get();
     if (!engine) return;
 
     engine.loadFEN(fen);
+    const state = createInitialState();
     set({
-      selectedSquare: null,
-      legalMoves: [],
-      lastMove: null,
-      result: { status: 'ongoing' },
-      redoStack: [],
-      history: [],
+      ...state,
+      ...syncState(state, engine),
     });
   },
 
   resign: () => {
-    const { engine } = get();
+    const state = get();
     if (!engine) return;
 
     const turn = engine.getCurrentTurn();
     const winner = turn === 'w' ? 'b' : 'w';
-    set({ result: { status: 'resign', winner: winner as Color } });
+    set({ result: { status: 'resign', winner } });
   },
 
   offerDraw: () => {

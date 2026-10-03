@@ -19,29 +19,42 @@ export default function Square({
   isLastMove,
   isInCheck,
 }: SquareProps) {
-  const { selectSquare, makeMove } = useGameStore();
+  const { clickSquare } = useGameStore();
   const file = index % 8;
   const rank = Math.floor(index / 8);
   const isDark = (file + rank) % 2 === 1;
 
   const handleClick = () => {
-    selectSquare(index);
+    clickSquare(index);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const uci = e.dataTransfer.getData('uci');
-    if (uci) {
-      makeMove(uci);
+    const from = parseInt(e.dataTransfer.getData('from'), 10);
+    if (!isNaN(from)) {
+      // clickSquare will handle the move logic
+      clickSquare(index);
     }
   };
 
-  const className = ['square', isDark ? 'dark' : 'light', isSelected && 'selected', isLegalTarget && 'legal-target', isLastMove && 'last-move', isInCheck && 'in-check']
+  const className = [
+    'square',
+    isDark ? 'dark' : 'light',
+    isSelected && 'selected',
+    isLegalTarget && 'legal-target',
+    isLastMove && 'last-move',
+    isInCheck && 'in-check',
+  ]
     .filter(Boolean)
     .join(' ');
 
   return (
-    <div className={className} onClick={handleClick} onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}>
+    <div
+      className={className}
+      onClick={handleClick}
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+    >
       {piece && <Piece piece={piece} index={index} />}
       {isLegalTarget && <div className="legal-marker" />}
     </div>

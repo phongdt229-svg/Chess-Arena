@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import Board2D from './components/board2d/Board2D';
 import Controls from './components/ui/Controls';
 import { useGameStore } from './store/gameStore';
 import './App.css';
 
 function App() {
-  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
-  const { gameState, newGame, resign } = useGameStore();
+  const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
+
+  useEffect(() => {
+    newGame({ mode: 'local' });
+  }, [newGame]);
 
   const handleNewGame = () => {
     newGame({ mode: 'local' });
@@ -30,7 +33,7 @@ function App() {
               2D View
             </button>
           )}
-          <button onClick={resign} className="btn-danger" disabled={gameState.result.status !== 'ongoing'}>
+          <button onClick={resign} className="btn-danger" disabled={result.status !== 'ongoing'}>
             Resign
           </button>
         </div>

@@ -1,39 +1,19 @@
-import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { GameEngine } from '@chess-arena/chess-core';
 import Square from './Square';
 import PromotionDialog from './PromotionDialog';
 import './Board2D.css';
 
 export default function Board2D() {
-  const { engine, selectedSquare, legalMoves, lastMove, orientation, pendingPromotion } =
-    useGameStore();
-  const [board, setBoard] = useState<(any | null)[]>(Array(64).fill(null));
-
-  useEffect(() => {
-    if (!engine) return;
-
-    const fen = engine.getFEN();
-    const parts = fen.split(' ');
-    const boardStr = parts[0];
-
-    const newBoard: (any | null)[] = Array(64).fill(null);
-    let squareIndex = 0;
-
-    for (const char of boardStr) {
-      if (char === '/') continue;
-      if (!isNaN(Number(char))) {
-        squareIndex += Number(char);
-      } else {
-        const isWhite = char === char.toUpperCase();
-        const type = char.toLowerCase();
-        newBoard[squareIndex] = { type, color: isWhite ? 'w' : 'b' };
-        squareIndex++;
-      }
-    }
-
-    setBoard(newBoard);
-  }, [engine]);
+  const {
+    board,
+    selectedSquare,
+    legalMoves,
+    lastMoveFrom,
+    lastMoveTo,
+    inCheckSquare,
+    orientation,
+    pendingPromotion,
+  } = useGameStore();
 
   const squares = [];
   for (let rank = 7; rank >= 0; rank--) {
@@ -49,7 +29,7 @@ export default function Board2D() {
   }
 
   const isLegalTarget = (sq: number) => legalMoves.some((m) => m.to === sq);
-  const isLastMoveSquare = (sq: number) => lastMove?.from === sq || lastMove?.to === sq;
+  const isLastMoveSquare = (sq: number) => lastMoveFrom === sq || lastMoveTo === sq;
 
   return (
     <div className="board-2d">
@@ -62,7 +42,7 @@ export default function Board2D() {
             isSelected={sq === selectedSquare}
             isLegalTarget={isLegalTarget(sq)}
             isLastMove={isLastMoveSquare(sq)}
-            isInCheck={false}
+            isInCheck={sq === inCheckSquare}
           />
         ))}
       </div>

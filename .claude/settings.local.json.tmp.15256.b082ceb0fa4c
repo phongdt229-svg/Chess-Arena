@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install *)",
+      "Bash(pnpm list *)",
+      "Bash(timeout 10 pnpm dev)",
+      "Bash(timeout 15 pnpm dev)",
+      "Bash(timeout 15 npm run dev)",
+      "Bash(pnpm build *)",
+      "Bash(git add *)",
+      "Bash(pnpm test *)",
+      "Bash(pkill -f \"pnpm dev\")",
+      "Bash(timeout 20 pnpm dev)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

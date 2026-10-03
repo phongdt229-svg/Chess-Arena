@@ -1,4 +1,3 @@
-import { useGameStore } from '../../store/gameStore';
 import './Piece.css';
 
 const PIECE_SYMBOLS: Record<string, string> = {
@@ -16,18 +15,12 @@ interface PieceProps {
 }
 
 export default function Piece({ piece, index }: PieceProps) {
-  const { selectedSquare, makeMove } = useGameStore();
   const symbol = PIECE_SYMBOLS[piece.type];
   const isWhite = piece.color === 'w';
 
   const handleDragStart = (e: React.DragEvent) => {
-    if (selectedSquare === null) return;
-    const file = index % 8;
-    const rank = Math.floor(index / 8);
-    const target = e.dataTransfer.target as HTMLElement;
-    if (!target) return;
-
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('from', index.toString());
   };
 
   const handleClick = (e: React.MouseEvent) => {

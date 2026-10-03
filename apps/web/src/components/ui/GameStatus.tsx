@@ -2,11 +2,10 @@ import { useGameStore } from '../../store/gameStore';
 import './GameStatus.css';
 
 export default function GameStatus() {
-  const { engine, result } = useGameStore();
+  const { fen, result } = useGameStore();
 
-  if (!engine) return null;
-
-  const turn = engine.getCurrentTurn();
+  // Determine whose turn it is from the FEN
+  const turn = fen.split(' ')[1] === 'w' ? 'w' : 'b';
 
   return (
     <div className="game-status">
@@ -22,13 +21,16 @@ export default function GameStatus() {
             {result.status === 'checkmate' && `Checkmate! ${result.winner === 'w' ? 'White' : 'Black'} wins`}
             {result.status === 'draw' && `Draw (${result.reason})`}
             {result.status === 'resign' && `${result.winner === 'w' ? 'White' : 'Black'} wins by resignation`}
+            {result.status === 'timeout' && `Timeout! ${result.winner === 'w' ? 'White' : 'Black'} wins`}
           </div>
         </div>
       )}
 
       <div className="fen-display">
         <div className="fen-label">FEN</div>
-        <div className="fen-value">{engine.getFEN()}</div>
+        <div className="fen-value" title={fen}>
+          {fen.substring(0, 30)}...
+        </div>
       </div>
     </div>
   );
