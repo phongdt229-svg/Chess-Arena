@@ -89,4 +89,57 @@ describe('GameEngine', () => {
       expect(engine.getMoveHistory()).toHaveLength(4);
     });
   });
+
+  describe('getBoard', () => {
+    it('should return 64-element board', () => {
+      const board = engine.getBoard();
+      expect(board).toHaveLength(64);
+    });
+
+    it('should parse starting position correctly', () => {
+      const board = engine.getBoard();
+      // Rank 0 (index 0-7): a1-h1 should have white pieces
+      expect(board[0]).toEqual({ type: 'r', color: 'w' }); // a1
+      expect(board[4]).toEqual({ type: 'k', color: 'w' }); // e1
+      // Rank 7 (index 56-63): a8-h8 should have black pieces
+      expect(board[56]).toEqual({ type: 'r', color: 'b' }); // a8
+      expect(board[60]).toEqual({ type: 'k', color: 'b' }); // e8
+    });
+  });
+
+  describe('getHistory', () => {
+    it('should return empty array initially', () => {
+      const history = engine.getHistory();
+      expect(history).toHaveLength(0);
+    });
+
+    it('should track moves in verbose format', () => {
+      engine.makeMove('e2e4');
+      engine.makeMove('e7e5');
+      const history = engine.getHistory(true) as any[];
+      expect(history).toHaveLength(2);
+      expect(history[0].san).toBe('e4');
+      expect(history[1].san).toBe('e5');
+    });
+  });
+
+  describe('getKingSquare', () => {
+    it('should find white king at starting position', () => {
+      const sq = engine.getKingSquare('w');
+      expect(sq).toBe(4); // e1 = rank 0, file 4
+    });
+
+    it('should find black king at starting position', () => {
+      const sq = engine.getKingSquare('b');
+      expect(sq).toBe(60); // e8 = rank 7, file 4
+    });
+
+    it('should track king after movement', () => {
+      engine.makeMove('e2e4');
+      engine.makeMove('e7e5');
+      engine.makeMove('f1e2');
+      const sq = engine.getKingSquare('w');
+      expect(sq).toBe(4); // King hasn't moved
+    });
+  });
 });

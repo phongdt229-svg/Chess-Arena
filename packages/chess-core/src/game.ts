@@ -1,5 +1,5 @@
 import { Chess, type Move as ChessJsMove } from 'chess.js';
-import type { Color, Move, GameResult, Square } from './types';
+import type { Color, Move, GameResult, Square, Piece } from './types';
 
 export class GameEngine {
   private chess: Chess;
@@ -130,6 +130,41 @@ export class GameEngine {
 
   perft(depth: number): number {
     return this.chess.perft(depth);
+  }
+
+  getBoard(): (Piece | null)[] {
+    const board: (Piece | null)[] = Array(64).fill(null);
+    const boardArray = this.chess.board();
+
+    for (let rank = 0; rank < 8; rank++) {
+      for (let file = 0; file < 8; file++) {
+        const piece = boardArray[7 - rank][file];
+        const index = rank * 8 + file;
+        if (piece) {
+          board[index] = { type: piece.type, color: piece.color };
+        }
+      }
+    }
+    return board;
+  }
+
+  getHistory(verbose = false): Move[] | string[] {
+    if (verbose) {
+      return this.chess.history({ verbose: true }).map((m) => this.convertMove(m));
+    }
+    return this.chess.history({ verbose: false });
+  }
+
+  getKingSquare(color: Color): Square {
+    const fen = this.chess.fen();
+    const board = this.getBoard();
+    for (let i = 0; i < 64; i++) {
+      const piece = board[i];
+      if (piece && piece.type === 'k' && piece.color === color) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private convertMove(move: ChessJsMove): Move {
