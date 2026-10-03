@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
+import { useState, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
@@ -11,17 +10,27 @@ function BoardScene() {
   const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation } =
     useGameStore();
   const [quality, setQuality] = useState<'low' | 'high'>('high');
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
   const isLegalTarget = (sq: number) => legalMoves.some((m) => m.to === sq);
   const isLastMoveSquare = (sq: number) => lastMoveFrom === sq || lastMoveTo === sq;
 
+  useEffect(() => {
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const pos = orientation === 'w' ? { x: 0, y: 8, z: 10 } : { x: 0, y: 8, z: -10 };
+      camera.position.set(pos.x, pos.y, pos.z);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    }
+  }, [camera, orientation]);
+
   const resetCamera = () => {
-    if (cameraRef.current && controlsRef.current) {
-      const distance = 12;
-      const cameraPos = orientation === 'w' ? { x: 0, y: 8, z: 10 } : { x: 0, y: 8, z: -10 };
-      cameraRef.current.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+    if (camera instanceof THREE.PerspectiveCamera && controlsRef.current) {
+      const pos = orientation === 'w' ? { x: 0, y: 8, z: 10 } : { x: 0, y: 8, z: -10 };
+      camera.position.set(pos.x, pos.y, pos.z);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
@@ -29,27 +38,19 @@ function BoardScene() {
 
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        position={orientation === 'w' ? [0, 8, 10] : [0, 8, -10]}
-        fov={50}
-        aspect={window.innerWidth / window.innerHeight}
-        near={0.1}
-        far={1000}
-      />
+      <PerspectiveCamera position={[0, 8, 10]} fov={50} makeDefault />
 
       <OrbitControls
         ref={controlsRef}
         maxPolarAngle={Math.PI * 0.45}
         minDistance={5}
         maxDistance={20}
-        autoRotate={false}
       />
 
       {quality === 'high' && (
         <>
           <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 10, 7]} intensity={0.8} castShadow shadow-mapSize={2048} />
+          <directionalLight position={[5, 10, 7]} intensity={0.8} castShadow shadow-mapSize={[2048, 2048]} />
         </>
       )}
       {quality === 'low' && <ambientLight intensity={0.8} />}
@@ -91,36 +92,12 @@ function BoardScene() {
   );
 }
 
-function PerspectiveCamera({
-  ref,
-  position,
-  fov,
-  aspect,
-  near,
-  far,
-}: {
-  ref: any;
-  position: [number, number, number];
-  fov: number;
-  aspect: number;
-  near: number;
-  far: number;
-}) {
-  const cam = useRef<THREE.PerspectiveCamera>(null);
-
-  if (ref) {
-    ref.current = cam.current;
-  }
-
-  return (
-    <perspectiveCamera ref={cam} position={position} fov={fov} aspect={aspect} near={near} far={far} />
-  );
-}
+import * as THREE from 'three';
 
 export default function Board3D() {
   return (
     <div className="board3d-container">
-      <Canvas shadows>
+      <Canvas shadows dpr={[1, 2]}>
         <BoardScene />
       </Canvas>
     </div>
