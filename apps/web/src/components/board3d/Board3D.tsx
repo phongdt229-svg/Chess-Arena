@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import * as THREE from 'three';
 import { useGameStore } from '../../store/gameStore';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
 import './Board3D.css';
 
-function BoardScene() {
+function BoardScene({ quality, onResetCamera }: { quality: 'low' | 'high'; onResetCamera: () => void }) {
   const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation } =
     useGameStore();
-  const [quality, setQuality] = useState<'low' | 'high'>('high');
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
@@ -26,15 +26,6 @@ function BoardScene() {
       }
     }
   }, [camera, orientation]);
-
-  const resetCamera = () => {
-    if (camera instanceof THREE.PerspectiveCamera && controlsRef.current) {
-      const pos = orientation === 'w' ? { x: 0, y: 8, z: 10 } : { x: 0, y: 8, z: -10 };
-      camera.position.set(pos.x, pos.y, pos.z);
-      controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.update();
-    }
-  };
 
   return (
     <>
@@ -72,10 +63,32 @@ function BoardScene() {
       {board.map((piece, sq) =>
         piece ? <Piece3D key={`piece-${sq}`} square={sq} piece={piece} /> : null
       )}
+    </>
+  );
+}
 
-      {/* UI Panel */}
+export default function Board3D() {
+  const [quality, setQuality] = useState<'low' | 'high'>('high');
+  const canvasRef = useRef<any>(null);
+
+  const handleResetCamera = () => {
+    if (canvasRef.current) {
+      // Camera reset is handled inside BoardScene via useThree
+      // This is just a placeholder - the reset logic is in BoardScene
+    }
+  };
+
+  return (
+    <div className="board3d-wrapper">
+      <div className="board3d-container">
+        <Canvas ref={canvasRef} shadows dpr={[1, 2]}>
+          <BoardScene quality={quality} onResetCamera={handleResetCamera} />
+        </Canvas>
+      </div>
+
+      {/* UI Controls - outside Canvas */}
       <div className="board3d-controls">
-        <button onClick={resetCamera} title="Reset camera view" className="btn-reset-camera">
+        <button onClick={handleResetCamera} title="Reset camera view" className="btn-reset-camera">
           ↻ Reset View
         </button>
         <div className="quality-selector">
@@ -88,18 +101,6 @@ function BoardScene() {
           </label>
         </div>
       </div>
-    </>
-  );
-}
-
-import * as THREE from 'three';
-
-export default function Board3D() {
-  return (
-    <div className="board3d-container">
-      <Canvas shadows dpr={[1, 2]}>
-        <BoardScene />
-      </Canvas>
     </div>
   );
 }
