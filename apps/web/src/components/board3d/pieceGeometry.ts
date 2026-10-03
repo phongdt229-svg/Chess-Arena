@@ -4,12 +4,6 @@ import type { PieceType } from '@chess-arena/chess-core';
 const PIECE_HEIGHT = 0.9;
 const PIECE_RADIUS = 0.32;
 
-/**
- * Create geometries for each piece type using simple shapes
- * Uses LatheGeometry for rotational symmetry (pawn, bishop, queen)
- * and basic BoxGeometry for others
- */
-
 export function getPieceGeometry(type: PieceType): THREE.BufferGeometry {
   switch (type) {
     case 'p':
@@ -29,320 +23,131 @@ export function getPieceGeometry(type: PieceType): THREE.BufferGeometry {
   }
 }
 
+function mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  let positions: number[] = [];
+  let indices: number[] = [];
+  let vertexOffset = 0;
+
+  for (const geom of geometries) {
+    const pos = geom.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) {
+      positions.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+    }
+
+    const idx = geom.getIndex();
+    if (idx) {
+      for (let i = 0; i < idx.count; i++) {
+        indices.push(idx.getX(i) + vertexOffset);
+      }
+    }
+    vertexOffset += pos.count;
+  }
+
+  const merged = new THREE.BufferGeometry();
+  merged.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  if (indices.length > 0) {
+    merged.setIndex(new THREE.BufferAttribute(new Uint32Array(indices), 1));
+  }
+  merged.computeVertexNormals();
+  return merged;
+}
+
 function createPawnGeometry(): THREE.BufferGeometry {
-  // Pawn: conical body + spherical head
-  const positions: number[] = [];
-  const indices: number[] = [];
+  // Base: cylinder
+  const base = new THREE.CylinderGeometry(PIECE_RADIUS * 0.75, PIECE_RADIUS * 0.8, PIECE_HEIGHT * 0.45, 16);
+  base.translate(0, -PIECE_HEIGHT * 0.1, 0);
 
-  // Base cylinder (wider at bottom)
-  const baseRadius = PIECE_RADIUS * 0.7;
-  const topRadius = PIECE_RADIUS * 0.55;
-  const baseHeight = PIECE_HEIGHT * 0.5;
+  // Head: sphere
+  const head = new THREE.SphereGeometry(PIECE_RADIUS * 0.6, 16, 16);
+  head.translate(0, PIECE_HEIGHT * 0.25, 0);
 
-  // Create cone-like base (tapered cylinder)
-  const segments = 16;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseRadius;
-    const z = Math.sin(angle) * baseRadius;
-    positions.push(x, -baseHeight / 2, z);
-  }
-
-  // Top ring of base
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * topRadius;
-    const z = Math.sin(angle) * topRadius;
-    positions.push(x, baseHeight / 2, z);
-  }
-
-  // Sphere top (simplified)
-  const sphereRadius = topRadius * 0.9;
-  for (let i = 0; i <= 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const x = Math.cos(angle) * sphereRadius;
-    const z = Math.sin(angle) * sphereRadius;
-    positions.push(x, baseHeight / 2 + sphereRadius * 0.8, z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([base, head]);
 }
 
 function createKnightGeometry(): THREE.BufferGeometry {
-  // Knight: wide base + cone head (horse-like)
-  const positions: number[] = [];
+  // Wide base
+  const base = new THREE.CylinderGeometry(PIECE_RADIUS * 0.75, PIECE_RADIUS * 0.8, PIECE_HEIGHT * 0.35, 16);
+  base.translate(0, -PIECE_HEIGHT * 0.15, 0);
 
-  // Wide base (horseshoe shape)
-  const baseRadius = PIECE_RADIUS * 0.8;
-  const baseHeight = PIECE_HEIGHT * 0.4;
-  const segments = 16;
+  // Head cone
+  const head = new THREE.ConeGeometry(PIECE_RADIUS * 0.5, PIECE_HEIGHT * 0.5, 16);
+  head.translate(0, PIECE_HEIGHT * 0.25, 0);
 
-  // Base ring
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseRadius;
-    const z = Math.sin(angle) * baseRadius;
-    positions.push(x, -baseHeight / 2, z);
-  }
-
-  // Top ring (narrower)
-  const topRadius = PIECE_RADIUS * 0.6;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * topRadius;
-    const z = Math.sin(angle) * topRadius;
-    positions.push(x, baseHeight / 2, z);
-  }
-
-  // Head cone (tall and narrow)
-  const headRadius = PIECE_RADIUS * 0.45;
-  const headHeight = PIECE_HEIGHT * 0.5;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * headRadius;
-    const z = Math.sin(angle) * headRadius;
-    positions.push(x, baseHeight / 2 + headHeight * 0.8, z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([base, head]);
 }
 
 function createBishopGeometry(): THREE.BufferGeometry {
-  // Bishop: cylinder body + pointed cone top with ball
-  const positions: number[] = [];
+  // Body: cylinder
+  const body = new THREE.CylinderGeometry(PIECE_RADIUS * 0.55, PIECE_RADIUS * 0.7, PIECE_HEIGHT * 0.45, 16);
+  body.translate(0, -PIECE_HEIGHT * 0.1, 0);
 
-  const bodyRadius = PIECE_RADIUS * 0.5;
-  const bodyHeight = PIECE_HEIGHT * 0.4;
-  const segments = 16;
+  // Top: cone
+  const top = new THREE.ConeGeometry(PIECE_RADIUS * 0.4, PIECE_HEIGHT * 0.45, 16);
+  top.translate(0, PIECE_HEIGHT * 0.35, 0);
 
-  // Body cylinder
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * bodyRadius;
-    const z = Math.sin(angle) * bodyRadius;
-    positions.push(x, -bodyHeight / 2, z);
-  }
-
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * bodyRadius;
-    const z = Math.sin(angle) * bodyRadius;
-    positions.push(x, bodyHeight / 2, z);
-  }
-
-  // Bulge in middle
-  const bulgeRadius = bodyRadius * 1.2;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * bulgeRadius;
-    const z = Math.sin(angle) * bulgeRadius;
-    positions.push(x, 0, z);
-  }
-
-  // Top cone point (tall and narrow)
-  const topRadius = PIECE_RADIUS * 0.3;
-  const topHeight = PIECE_HEIGHT * 0.45;
-  for (let i = 0; i <= 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const x = Math.cos(angle) * topRadius;
-    const z = Math.sin(angle) * topRadius;
-    positions.push(x, bodyHeight / 2 + topHeight * 0.9, z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([body, top]);
 }
 
 function createRookGeometry(): THREE.BufferGeometry {
-  // Rook: tall cylinder with castle-like top (crenellations)
-  const positions: number[] = [];
+  // Main body: tall cylinder
+  const body = new THREE.CylinderGeometry(PIECE_RADIUS * 0.65, PIECE_RADIUS * 0.7, PIECE_HEIGHT * 0.7, 16);
+  body.translate(0, 0, 0);
 
-  const baseRadius = PIECE_RADIUS * 0.65;
-  const bodyHeight = PIECE_HEIGHT * 0.65;
-  const segments = 16;
+  // Top ring: wide cylinder
+  const top = new THREE.CylinderGeometry(PIECE_RADIUS * 0.75, PIECE_RADIUS * 0.75, PIECE_HEIGHT * 0.2, 16);
+  top.translate(0, PIECE_HEIGHT * 0.45, 0);
 
-  // Main body - cylinder
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseRadius;
-    const z = Math.sin(angle) * baseRadius;
-    positions.push(x, -bodyHeight / 2, z);
-  }
-
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseRadius;
-    const z = Math.sin(angle) * baseRadius;
-    positions.push(x, bodyHeight / 2, z);
-  }
-
-  // Castle top (wider ring)
-  const topRadius = PIECE_RADIUS * 0.75;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * topRadius;
-    const z = Math.sin(angle) * topRadius;
-    positions.push(x, bodyHeight / 2 + PIECE_HEIGHT * 0.15, z);
-  }
-
-  // Crenellations (small squares on top)
-  const crenRadius = PIECE_RADIUS * 0.55;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * crenRadius;
-    const z = Math.sin(angle) * crenRadius;
-    positions.push(x, bodyHeight / 2 + PIECE_HEIGHT * 0.25, z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([body, top]);
 }
 
 function createQueenGeometry(): THREE.BufferGeometry {
-  // Queen: bulbous body + tall crown-like top
-  const positions: number[] = [];
+  // Lower body: cylinder
+  const lower = new THREE.CylinderGeometry(PIECE_RADIUS * 0.65, PIECE_RADIUS * 0.7, PIECE_HEIGHT * 0.35, 16);
+  lower.translate(0, -PIECE_HEIGHT * 0.1, 0);
 
-  const segments = 16;
+  // Upper body: cone
+  const upper = new THREE.ConeGeometry(PIECE_RADIUS * 0.5, PIECE_HEIGHT * 0.4, 16);
+  upper.translate(0, PIECE_HEIGHT * 0.25, 0);
 
-  // Lower body (wider base)
-  const baseLowerRadius = PIECE_RADIUS * 0.65;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseLowerRadius;
-    const z = Math.sin(angle) * baseLowerRadius;
-    positions.push(x, -PIECE_HEIGHT * 0.25, z);
-  }
+  // Crown: smaller cone
+  const crown = new THREE.ConeGeometry(PIECE_RADIUS * 0.35, PIECE_HEIGHT * 0.35, 16);
+  crown.translate(0, PIECE_HEIGHT * 0.6, 0);
 
-  // Bulge (widest point)
-  const bulgeRadius = PIECE_RADIUS * 0.7;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * bulgeRadius;
-    const z = Math.sin(angle) * bulgeRadius;
-    positions.push(x, 0, z);
-  }
-
-  // Upper body taper
-  const upperRadius = PIECE_RADIUS * 0.55;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * upperRadius;
-    const z = Math.sin(angle) * upperRadius;
-    positions.push(x, PIECE_HEIGHT * 0.25, z);
-  }
-
-  // Crown base
-  const crownBase = PIECE_RADIUS * 0.45;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * crownBase;
-    const z = Math.sin(angle) * crownBase;
-    positions.push(x, PIECE_HEIGHT * 0.35, z);
-  }
-
-  // Crown top (pointed)
-  const crownTip = PIECE_RADIUS * 0.25;
-  for (let i = 0; i <= 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const x = Math.cos(angle) * crownTip;
-    const z = Math.sin(angle) * crownTip;
-    positions.push(x, PIECE_HEIGHT * 0.85, z);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([lower, upper, crown]);
 }
 
 function createKingGeometry(): THREE.BufferGeometry {
-  // King: robust base + tall crown with cross
-  const positions: number[] = [];
-  const segments = 16;
+  // Base: cylinder
+  const base = new THREE.CylinderGeometry(PIECE_RADIUS * 0.7, PIECE_RADIUS * 0.75, PIECE_HEIGHT * 0.4, 16);
+  base.translate(0, -PIECE_HEIGHT * 0.1, 0);
 
-  // Robust base
-  const baseRadius = PIECE_RADIUS * 0.7;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * baseRadius;
-    const z = Math.sin(angle) * baseRadius;
-    positions.push(x, -PIECE_HEIGHT * 0.2, z);
-  }
+  // Body: cone
+  const body = new THREE.ConeGeometry(PIECE_RADIUS * 0.55, PIECE_HEIGHT * 0.35, 16);
+  body.translate(0, PIECE_HEIGHT * 0.15, 0);
 
-  // Body
-  const bodyRadius = PIECE_RADIUS * 0.6;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * bodyRadius;
-    const z = Math.sin(angle) * bodyRadius;
-    positions.push(x, PIECE_HEIGHT * 0.2, z);
-  }
+  // Crown: cone
+  const crown = new THREE.ConeGeometry(PIECE_RADIUS * 0.4, PIECE_HEIGHT * 0.4, 16);
+  crown.translate(0, PIECE_HEIGHT * 0.55, 0);
 
-  // Crown base (wider ring)
-  const crownBase = PIECE_RADIUS * 0.65;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * crownBase;
-    const z = Math.sin(angle) * crownBase;
-    positions.push(x, PIECE_HEIGHT * 0.35, z);
-  }
-
-  // Crown middle (narrower)
-  const crownMid = PIECE_RADIUS * 0.5;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * crownMid;
-    const z = Math.sin(angle) * crownMid;
-    positions.push(x, PIECE_HEIGHT * 0.6, z);
-  }
-
-  // Crown top points (star-like)
-  const crownTop = PIECE_RADIUS * 0.35;
-  for (let i = 0; i <= 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const x = Math.cos(angle) * crownTop;
-    const z = Math.sin(angle) * crownTop;
-    positions.push(x, PIECE_HEIGHT * 0.85, z);
-  }
-
-  // Cross point (very top)
-  positions.push(0, PIECE_HEIGHT * 0.95, 0);
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+  return mergeGeometries([base, body, crown]);
 }
 
-/**
- * Create material for pieces - sleek and polished look
- */
 export function getPieceMaterial(color: 'w' | 'b'): THREE.Material {
   if (color === 'w') {
     return new THREE.MeshStandardMaterial({
-      color: 0xf5f5dc, // Beige/ivory
-      roughness: 0.2,
-      metalness: 0.3,
-      emissive: 0xfafaf0,
-      emissiveIntensity: 0.1,
+      color: 0xffffff, // Bright white
+      roughness: 0.15,
+      metalness: 0.35,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.15,
     });
   } else {
     return new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a, // Dark gray/black
-      roughness: 0.15,
-      metalness: 0.4,
-      emissive: 0x0a0a0a,
-      emissiveIntensity: 0.1,
+      color: 0x000000, // Pure black
+      roughness: 0.1,
+      metalness: 0.5,
+      emissive: 0x222222,
+      emissiveIntensity: 0.15,
     });
   }
 }
