@@ -1,0 +1,24 @@
+{
+  "name": "@chess-arena/chess-core",
+  "version": "0.0.1",
+  "description": "Chess rules engine (TypeScript wrapper around chess.js)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "dependencies": {
+    "chess.js": "^1.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
