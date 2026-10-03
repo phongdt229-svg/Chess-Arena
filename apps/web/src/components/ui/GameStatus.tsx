@@ -2,7 +2,7 @@ import { useGameStore } from '../../store/gameStore';
 import './GameStatus.css';
 
 export default function GameStatus() {
-  const { fen, result } = useGameStore();
+  const { fen, result, gameMode, aiLevel, aiThinking, playerColor } = useGameStore();
 
   // Determine whose turn it is from the FEN
   const turn = fen.split(' ')[1] === 'w' ? 'w' : 'b';
@@ -11,8 +11,21 @@ export default function GameStatus() {
     <div className="game-status">
       <div className="status-box">
         <div className="status-label">To Move</div>
-        <div className="status-value">{turn === 'w' ? '♔ White' : '♚ Black'}</div>
+        <div className={`status-value ${aiThinking ? 'thinking' : ''}`}>
+          {aiThinking ? '⏳ AI thinking...' : `${turn === 'w' ? '♔ White' : '♚ Black'}`}
+        </div>
       </div>
+
+      {gameMode === 'ai' && (
+        <div className="status-box">
+          <div className="status-label">Game Mode</div>
+          <div className="status-value">
+            vs AI Level {aiLevel}
+            <br />
+            <small>({playerColor === 'w' ? '♔ White' : '♚ Black'})</small>
+          </div>
+        </div>
+      )}
 
       {result.status !== 'ongoing' && (
         <div className="status-box result">

@@ -1,13 +1,15 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, useState } from 'react';
 import Board2D from './components/board2d/Board2D';
 import Controls from './components/ui/Controls';
 import GameOverModal from './components/ui/GameOverModal';
+import NewGameDialog from './components/ui/NewGameDialog';
 import { useGameStore } from './store/gameStore';
 import './App.css';
 
 const Board3D = lazy(() => import('./components/board3d/Board3D'));
 
 function App() {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
 
   useEffect(() => {
@@ -15,7 +17,7 @@ function App() {
   }, [newGame]);
 
   const handleNewGame = () => {
-    newGame({ mode: 'local' });
+    setDialogOpen(true);
   };
 
   return (
@@ -53,11 +55,12 @@ function App() {
         </div>
 
         <aside className="sidebar">
-          <Controls />
+          <Controls onNewGameClick={handleNewGame} />
         </aside>
       </main>
 
       <GameOverModal />
+      <NewGameDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />
     </div>
   );
 }

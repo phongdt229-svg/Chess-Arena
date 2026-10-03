@@ -2,7 +2,7 @@ import { useGameStore } from '../../store/gameStore';
 import './GameOverModal.css';
 
 export default function GameOverModal() {
-  const { result, newGame } = useGameStore();
+  const { result, newGame, lastOptions } = useGameStore();
 
   if (result.status === 'ongoing') return null;
 
@@ -34,7 +34,7 @@ export default function GameOverModal() {
       <div className="game-over-modal">
         <h2>Game Over</h2>
         <p className="result-text">{getResultText()}</p>
-        <button className="btn-primary btn-large" onClick={() => newGame({ mode: 'local' })}>
+        <button className="btn-primary btn-large" onClick={() => newGame(lastOptions || { mode: 'local' })}>
           ♻ Play Again
         </button>
       </div>

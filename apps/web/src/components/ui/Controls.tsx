@@ -3,8 +3,12 @@ import MoveHistory from './MoveHistory';
 import GameStatus from './GameStatus';
 import './Controls.css';
 
-export default function Controls() {
-  const { undo, redo, flipBoard, newGame, history, redoStack } = useGameStore();
+interface ControlsProps {
+  onNewGameClick?: () => void;
+}
+
+export default function Controls({ onNewGameClick }: ControlsProps) {
+  const { undo, redo, flipBoard, history, redoStack } = useGameStore();
 
   return (
     <div className="controls">
@@ -20,7 +24,7 @@ export default function Controls() {
         <button className="btn-block btn-secondary" onClick={flipBoard}>
           ⟲ Flip Board
         </button>
-        <button className="btn-block btn-primary" onClick={() => newGame({ mode: 'local' })}>
+        <button className="btn-block btn-primary" onClick={onNewGameClick}>
           ♻ New Game
         </button>
       </div>
