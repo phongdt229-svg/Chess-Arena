@@ -5,7 +5,7 @@ import { Link, matchRoute, navigate, parseLocation, safeNext, useLocation } from
 import { redirectFor } from '../../App';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-window.scrollTo = vi.fn();
+window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 
 describe('parseLocation', () => {
   it('splits path and query, trims trailing slashes', () => {
