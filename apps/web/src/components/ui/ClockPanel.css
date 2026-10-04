@@ -1,0 +1,44 @@
+.clock-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.clock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f0f0f0;
+  color: #555;
+}
+
+.clock-row.active {
+  background: #333;
+  color: white;
+}
+
+.clock-row.low .clock-time {
+  color: #e53935;
+}
+
+.clock-row.active.low .clock-time {
+  color: #ff8a80;
+}
+
+.clock-side {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.clock-time {
+  font-family: 'Courier New', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

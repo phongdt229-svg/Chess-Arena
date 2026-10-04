@@ -1,6 +1,7 @@
 import { useGameStore } from '../../store/gameStore';
 import MoveHistory from './MoveHistory';
 import GameStatus from './GameStatus';
+import ClockPanel from './ClockPanel';
 import './Controls.css';
 
 interface ControlsProps {
@@ -12,6 +13,7 @@ export default function Controls({ onNewGameClick }: ControlsProps) {
 
   return (
     <div className="controls">
+      <ClockPanel />
       <GameStatus />
 
       <div className="control-panel">

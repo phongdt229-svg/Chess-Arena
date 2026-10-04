@@ -166,3 +166,12 @@
 .btn-start:active {
   transform: scale(0.98);
 }
+
+.dialog-select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+}

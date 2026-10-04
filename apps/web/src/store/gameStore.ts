@@ -3,6 +3,14 @@ import { GameEngine } from '@chess-arena/chess-core';
 import type { Move, GameResult, Color, Piece } from '@chess-arena/chess-core';
 import * as aiClient from '../ai/aiClient';
 import { evaluateFen } from '../ai/engine';
+import { NO_CLOCK, makeClock, type ClockState, type TimeControl } from './clock';
+
+export interface NewGameOptions {
+  mode?: 'local' | 'ai';
+  playerColor?: Color;
+  aiLevel?: number;
+  timeControl?: TimeControl | null;
+}
 
 interface GameState {
   fen: string;
@@ -22,11 +30,13 @@ interface GameState {
   playerColor: Color;
   aiLevel: number;
   aiThinking: boolean;
-  lastOptions: { mode: 'local' | 'ai'; playerColor?: Color; aiLevel?: number } | null;
+  lastOptions: NewGameOptions | null;
+  clock: ClockState;
 }
 
 interface GameActions extends GameState {
-  newGame: (options?: { mode?: 'local' | 'ai'; playerColor?: Color; aiLevel?: number }) => void;
+  newGame: (options?: NewGameOptions) => void;
+  tickClock: () => void;
   clickSquare: (sq: number) => void;
   tryMove: (from: number, to: number, promotion?: string) => void;
   choosePromotion: (promotion: 'q' | 'r' | 'b' | 'n') => void;
@@ -43,10 +53,20 @@ interface GameActions extends GameState {
 
 let engine: GameEngine | null = null;
 let aiRequestId = 0;
+let lastTickAt = Date.now();
 
 const cancelAi = () => {
   aiRequestId++;
   aiClient.cancel();
+};
+
+const otherColor = (c: Color): Color => (c === 'w' ? 'b' : 'w');
+
+// Increment goes to the side that just moved, from the third ply on (clock starts once both sides moved)
+const clockAfterMove = (clock: ClockState, mover: Color, plies: number): ClockState => {
+  if (!clock.enabled || clock.incrementMs === 0 || plies <= 2) return clock;
+  const key = mover === 'w' ? 'whiteMs' : 'blackMs';
+  return { ...clock, [key]: clock[key] + clock.incrementMs };
 };
 
 const scheduleAi = (delayMs: number) => {
@@ -75,6 +95,7 @@ const createInitialState = (): GameState => ({
   aiLevel: 3,
   aiThinking: false,
   lastOptions: null,
+  clock: NO_CLOCK,
 });
 
 const syncState = (state: GameState, eng: GameEngine): Partial<GameState> => {
@@ -97,7 +118,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
   ...createInitialState(),
 
   newGame: (options = {}) => {
-    const { mode = 'local', playerColor = 'w', aiLevel = 3 } = options;
+    const { mode = 'local', playerColor = 'w', aiLevel = 3, timeControl = null } = options;
     cancelAi();
 
     engine = GameEngine.create();
@@ -109,8 +130,10 @@ export const useGameStore = create<GameActions>((set, get) => ({
       playerColor: playerColor,
       aiLevel: aiLevel,
       orientation: playerColor,
-      lastOptions: { mode, playerColor, aiLevel },
+      lastOptions: { mode, playerColor, aiLevel, timeControl },
+      clock: makeClock(timeControl),
     };
+    lastTickAt = Date.now();
     set(newState);
 
     if (mode === 'ai' && playerColor === 'b') scheduleAi(500);
@@ -158,13 +181,15 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
     if (!move) return;
 
+    const synced = syncState(get(), engine);
     set({
-      ...syncState(get(), engine),
+      ...synced,
       lastMoveFrom: from,
       lastMoveTo: to,
       selectedSquare: null,
       legalMoves: [],
       redoStack: [],
+      clock: clockAfterMove(get().clock, otherColor(engine.getCurrentTurn()), synced.history?.length ?? 0),
     });
 
     scheduleAi(300);
@@ -294,6 +319,34 @@ export const useGameStore = create<GameActions>((set, get) => ({
     return true;
   },
 
+  tickClock: () => {
+    const now = Date.now();
+    const elapsed = now - lastTickAt;
+    lastTickAt = now;
+
+    const state = get();
+    const { clock } = state;
+    if (!engine || !clock.enabled || state.result.status !== 'ongoing' || state.history.length < 2) return;
+
+    const turn = engine.getCurrentTurn();
+    const key = turn === 'w' ? 'whiteMs' : 'blackMs';
+    const remaining = clock[key] - elapsed;
+    if (remaining > 0) {
+      set({ clock: { ...clock, [key]: remaining } });
+      return;
+    }
+
+    cancelAi();
+    set({
+      clock: { ...clock, [key]: 0 },
+      result: { status: 'timeout', winner: otherColor(turn) },
+      aiThinking: false,
+      pendingPromotion: null,
+      selectedSquare: null,
+      legalMoves: [],
+    });
+  },
+
   maybeAiMove: async () => {
     const state = get();
     if (!engine || state.gameMode !== 'ai' || state.result.status !== 'ongoing' || state.aiThinking) return;
@@ -315,14 +368,16 @@ export const useGameStore = create<GameActions>((set, get) => ({
         return;
       }
 
+      const synced = syncState(state, engine);
       set({
-        ...syncState(state, engine),
+        ...synced,
         lastMoveFrom: move.from,
         lastMoveTo: move.to,
         selectedSquare: null,
         legalMoves: [],
         redoStack: [],
         aiThinking: false,
+        clock: clockAfterMove(get().clock, otherColor(engine.getCurrentTurn()), synced.history?.length ?? 0),
       });
     } catch (err) {
       console.error('AI move failed:', err);

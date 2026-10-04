@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { TIME_CONTROLS } from '../../store/clock';
 import './NewGameDialog.css';
 
 interface NewGameDialogProps {
@@ -12,10 +13,13 @@ export default function NewGameDialog({ isOpen, onClose }: NewGameDialogProps) {
   const [mode, setMode] = useState<'local' | 'ai'>('local');
   const [playerColor, setPlayerColor] = useState<'w' | 'b' | 'random'>('random');
   const [aiLevel, setAiLevel] = useState(3);
+  const [timeId, setTimeId] = useState('none');
 
   const handleStart = () => {
-    const color = playerColor === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColor;
-    newGame({ mode, playerColor: color, aiLevel });
+    // Colour only matters against the AI; a local game always starts with White at the bottom
+    const color = mode === 'local' ? 'w' : playerColor === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColor;
+    const timeControl = TIME_CONTROLS.find((t) => t.id === timeId)?.control ?? null;
+    newGame({ mode, playerColor: color, aiLevel, timeControl });
     onClose();
   };
 
@@ -79,6 +83,17 @@ export default function NewGameDialog({ isOpen, onClose }: NewGameDialogProps) {
             </div>
           </>
         )}
+
+        <div className="dialog-section">
+          <label htmlFor="time-control">Time Control</label>
+          <select id="time-control" className="dialog-select" value={timeId} onChange={(e) => setTimeId(e.target.value)}>
+            {TIME_CONTROLS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="dialog-actions">
           <button onClick={onClose} className="btn-cancel">
