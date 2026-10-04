@@ -1,0 +1,8 @@
+# Keep the Authorization header on shared Apache/CGI hosting
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Never serve internals directly
+RewriteRule ^lib/ - [F,L]
+RewriteRule ^config - [F,L]
+RewriteRule ^schema\.sql$ - [F,L]
