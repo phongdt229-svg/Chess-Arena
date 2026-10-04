@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import MoveHistory from './MoveHistory';
 import GameStatus from './GameStatus';
 import ClockPanel from './ClockPanel';
@@ -10,6 +11,7 @@ interface ControlsProps {
 
 export default function Controls({ onNewGameClick }: ControlsProps) {
   const { undo, redo, flipBoard, history, redoStack } = useGameStore();
+  const { soundEnabled, toggleSound } = useSettingsStore();
 
   return (
     <div className="controls">
@@ -25,6 +27,9 @@ export default function Controls({ onNewGameClick }: ControlsProps) {
         </button>
         <button className="btn-block btn-secondary" onClick={flipBoard}>
           ⟲ Flip Board
+        </button>
+        <button className="btn-block btn-secondary" onClick={toggleSound} aria-pressed={soundEnabled}>
+          {soundEnabled ? '🔊 Sound: On' : '🔇 Sound: Off'}
         </button>
         <button className="btn-block btn-primary" onClick={onNewGameClick}>
           ♻ New Game

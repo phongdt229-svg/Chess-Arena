@@ -7,6 +7,7 @@ import PromotionDialog from './components/board2d/PromotionDialog';
 import AuthScreen from './components/auth/AuthScreen';
 import { useGameStore } from './store/gameStore';
 import { useAuthStore } from './store/authStore';
+import { useGameSounds } from './audio/useGameSounds';
 import './App.css';
 
 const Board3D = lazy(() => import('./components/board3d/Board3D'));
@@ -15,6 +16,7 @@ function GameApp() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
   const { user, logout } = useAuthStore();
+  useGameSounds();
 
   useEffect(() => {
     newGame({ mode: 'local' });
