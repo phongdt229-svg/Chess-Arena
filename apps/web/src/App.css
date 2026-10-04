@@ -205,3 +205,28 @@
     width: 100%;
   }
 }
+
+.header-user {
+  align-self: center;
+  font-weight: 600;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .header-user {
+    flex-basis: 100%;
+    text-align: center;
+    max-width: none;
+  }
+
+  .header-controls {
+    flex-wrap: wrap;
+  }
+}

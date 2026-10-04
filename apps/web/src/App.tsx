@@ -3,14 +3,17 @@ import Board2D from './components/board2d/Board2D';
 import Controls from './components/ui/Controls';
 import GameOverModal from './components/ui/GameOverModal';
 import NewGameDialog from './components/ui/NewGameDialog';
+import AuthScreen from './components/auth/AuthScreen';
 import { useGameStore } from './store/gameStore';
+import { useAuthStore } from './store/authStore';
 import './App.css';
 
 const Board3D = lazy(() => import('./components/board3d/Board3D'));
 
-function App() {
+function GameApp() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
+  const { user, logout } = useAuthStore();
 
   useEffect(() => {
     newGame({ mode: 'local' });
@@ -25,6 +28,9 @@ function App() {
       <header className="app-header">
         <h1>♟ Chess Arena</h1>
         <div className="header-controls">
+          <span className="header-user" title={`Elo ${user?.elo ?? ''}`}>
+            {user?.username}
+          </span>
           <button onClick={handleNewGame} className="btn-primary">
             New Game
           </button>
@@ -40,6 +46,9 @@ function App() {
           )}
           <button onClick={resign} className="btn-danger" disabled={result.status !== 'ongoing'}>
             Resign
+          </button>
+          <button onClick={logout} className="btn-secondary btn-logout" title="Đăng xuất">
+            Đăng xuất
           </button>
         </div>
       </header>
@@ -63,6 +72,18 @@ function App() {
       <NewGameDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />
     </div>
   );
+}
+
+function App() {
+  const { status, init } = useAuthStore();
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
+  if (status === 'loading') return <div className="auth-loading">Đang tải…</div>;
+  if (status === 'anon') return <AuthScreen />;
+  return <GameApp />;
 }
 
 export default App;
