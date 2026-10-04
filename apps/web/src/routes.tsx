@@ -3,6 +3,7 @@ import AuthScreen from './components/auth/AuthScreen';
 import GameApp from './game/GameApp';
 import NotFound from './site/pages/NotFound';
 import Placeholder from './site/pages/Placeholder';
+import Home from './site/pages/Home';
 import type { RouteDef } from './router/router';
 
 export type Access = 'public' | 'auth' | 'guest';
@@ -16,7 +17,7 @@ export interface AppRoute {
 const page = (access: Access, element: ReactElement, layout = true): AppRoute => ({ access, element, layout });
 
 export const ROUTES: RouteDef<AppRoute>[] = [
-  { path: '/', value: page('public', <Placeholder title="Trang chủ" />) },
+  { path: '/', value: page('public', <Home />) },
   { path: '/rules', value: page('public', <Placeholder title="Luật cờ" />) },
   { path: '/guide', value: page('public', <Placeholder title="Hướng dẫn" />) },
   { path: '/openings', value: page('public', <Placeholder title="Khai cuộc" />) },
