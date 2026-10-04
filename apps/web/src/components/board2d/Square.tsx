@@ -19,7 +19,7 @@ export default function Square({
   isLastMove,
   isInCheck,
 }: SquareProps) {
-  const { clickSquare } = useGameStore();
+  const { clickSquare, selectedSquare } = useGameStore();
   const file = index % 8;
   const rank = Math.floor(index / 8);
   const isDark = (file + rank) % 2 === 1;
@@ -31,10 +31,9 @@ export default function Square({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const from = parseInt(e.dataTransfer.getData('from'), 10);
-    if (!isNaN(from)) {
-      // clickSquare will handle the move logic
-      clickSquare(index);
-    }
+    if (isNaN(from) || from === index) return;
+    if (selectedSquare !== from) clickSquare(from);
+    clickSquare(index);
   };
 
   const className = [

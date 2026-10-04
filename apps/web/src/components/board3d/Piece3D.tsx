@@ -12,7 +12,7 @@ interface Piece3DProps {
 }
 
 export default function Piece3D({ square, piece }: Piece3DProps) {
-  const { selectedSquare, lastMoveFrom, lastMoveTo } = useGameStore();
+  const { selectedSquare, lastMoveFrom, lastMoveTo, clickSquare } = useGameStore();
   const meshRef = useRef<THREE.Mesh>(null);
   const startPos = useRef(lastMoveFrom ? squareToWorld(lastMoveFrom) : squareToWorld(square));
   const endPos = useRef(squareToWorld(square));
@@ -69,6 +69,10 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
       position={[coords.x, coords.y + yOffset, coords.z]}
       geometry={geometry}
       material={material}
+      onClick={(e) => {
+        e.stopPropagation();
+        clickSquare(square);
+      }}
       castShadow
       receiveShadow
     />

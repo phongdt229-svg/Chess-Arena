@@ -23,16 +23,11 @@ export default function Piece({ piece, index }: PieceProps) {
     e.dataTransfer.setData('from', index.toString());
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
     <div
       className={`piece ${isWhite ? 'white' : 'black'}`}
       draggable
       onDragStart={handleDragStart}
-      onClick={handleClick}
     >
       {symbol}
     </div>
