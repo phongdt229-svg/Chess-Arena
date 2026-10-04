@@ -1,0 +1,47 @@
+.settings-card {
+  margin-bottom: 1.2rem;
+}
+
+.settings-card h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.settings-row:first-of-type {
+  border-top: none;
+}
+
+.settings-row small {
+  display: block;
+  color: var(--muted);
+}
+
+.settings-row select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.95rem;
+  min-width: 11rem;
+}
+
+.settings-row input[type='checkbox'] {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--brand);
+}
+
+@media (max-width: 520px) {
+  .settings-row select {
+    min-width: 8.5rem;
+  }
+}

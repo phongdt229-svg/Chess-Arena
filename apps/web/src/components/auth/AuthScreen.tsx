@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { Link, navigate, useLocation } from '../../router/router';
+import { usePageMeta } from '../../site/usePageMeta';
 import './AuthScreen.css';
 
 type Tab = 'login' | 'register';
@@ -28,6 +29,7 @@ function validate(tab: Tab, username: string, password: string, confirm: string)
 
 export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab }) {
   const { search } = useLocation();
+  usePageMeta(initialTab === 'register' ? 'Đăng ký' : 'Đăng nhập');
   const { login, register, busy, error, clearError } = useAuthStore();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [username, setUsername] = useState('');

@@ -82,7 +82,7 @@
 }
 
 .puzzle-board .piece {
-  font-size: min(6vw, 3.3rem);
+  font-size: min(8vw, 3.3rem);
 }
 
 .puzzle-panel h2 {

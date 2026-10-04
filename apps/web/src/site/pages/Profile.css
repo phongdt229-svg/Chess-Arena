@@ -1,0 +1,93 @@
+.profile-head {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.profile-head h2 {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.profile-head p {
+  color: var(--muted);
+}
+
+.profile-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: var(--brand);
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-block {
+  margin-bottom: 1.2rem;
+}
+
+.profile-block h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.6rem;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.profile-stats div {
+  background: #f1f2f8;
+  border-radius: 8px;
+  padding: 0.6rem 0.4rem;
+  text-align: center;
+}
+
+.profile-stats strong {
+  display: block;
+  font-size: 1.4rem;
+}
+
+.profile-stats span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.profile-muted {
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+
+.profile-actions,
+.profile-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.profile-block p {
+  margin-bottom: 0.7rem;
+}
+
+.site .site-btn.danger {
+  color: #b71c1c;
+  border-color: #e57373;
+}
+
+.site-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .profile-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -9,7 +9,10 @@ import { useAuthStore } from '../store/authStore';
 import { Link, navigate, useLocation } from '../router/router';
 import ResumeDialog from '../components/ui/ResumeDialog';
 import { useGameSounds } from '../audio/useGameSounds';
+import { usePageMeta } from '../site/usePageMeta';
 import { useAutoSave } from '../persistence/useAutoSave';
+import { useRecordStats } from '../persistence/useRecordStats';
+import { useSettingsStore } from '../store/settingsStore';
 import { clearSave, readSave, type SavedGame } from '../persistence/savedGame';
 import '../App.css';
 
@@ -21,7 +24,9 @@ export default function GameApp() {
   const { user, logout } = useAuthStore();
   const { search } = useLocation();
   const importedPgn = useRef(search.get('pgn')).current;
+  usePageMeta('Chơi cờ');
   useGameSounds();
+  useRecordStats(user?.id);
 
   const [resumeOffer, setResumeOffer] = useState<SavedGame | null>(() =>
     user && !importedPgn ? readSave(user.id) : null,
@@ -30,6 +35,7 @@ export default function GameApp() {
 
   useEffect(() => {
     newGame({ mode: 'local' });
+    useGameStore.getState().setViewMode(useSettingsStore.getState().defaultView);
     if (importedPgn) {
       useGameStore.getState().loadPGN(importedPgn);
       navigate('/play', { replace: true });

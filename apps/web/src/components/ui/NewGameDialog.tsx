@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { TIME_CONTROLS } from '../../store/clock';
+import { useSettingsStore } from '../../store/settingsStore';
 import './NewGameDialog.css';
 
 interface NewGameDialogProps {
@@ -10,10 +11,11 @@ interface NewGameDialogProps {
 
 export default function NewGameDialog({ isOpen, onClose }: NewGameDialogProps) {
   const { newGame } = useGameStore();
-  const [mode, setMode] = useState<'local' | 'ai'>('local');
-  const [playerColor, setPlayerColor] = useState<'w' | 'b' | 'random'>('random');
-  const [aiLevel, setAiLevel] = useState(3);
-  const [timeId, setTimeId] = useState('none');
+  const defaults = useSettingsStore.getState();
+  const [mode, setMode] = useState<'local' | 'ai'>(defaults.defaultMode);
+  const [playerColor, setPlayerColor] = useState<'w' | 'b' | 'random'>(defaults.defaultColor);
+  const [aiLevel, setAiLevel] = useState(defaults.defaultLevel);
+  const [timeId, setTimeId] = useState(defaults.defaultTime);
 
   const handleStart = () => {
     // Colour only matters against the AI; a local game always starts with White at the bottom

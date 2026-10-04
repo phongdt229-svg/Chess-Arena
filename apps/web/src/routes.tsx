@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import AuthScreen from './components/auth/AuthScreen';
 import GameApp from './game/GameApp';
 import NotFound from './site/pages/NotFound';
-import Placeholder from './site/pages/Placeholder';
 import Home from './site/pages/Home';
 import Rules from './site/pages/Rules';
 import Guide from './site/pages/Guide';
@@ -10,6 +9,8 @@ import Terms from './site/pages/Terms';
 import Privacy from './site/pages/Privacy';
 import Openings from './site/pages/Openings';
 import Puzzles from './site/pages/Puzzles';
+import Settings from './site/pages/Settings';
+import Profile from './site/pages/Profile';
 import type { RouteDef } from './router/router';
 
 export type Access = 'public' | 'auth' | 'guest';
@@ -33,7 +34,7 @@ export const ROUTES: RouteDef<AppRoute>[] = [
   { path: '/register', value: page('guest', <AuthScreen initialTab="register" />, false) },
   { path: '/play', value: page('auth', <GameApp />, false) },
   { path: '/puzzles', value: page('auth', <Puzzles />) },
-  { path: '/profile', value: page('auth', <Placeholder title="Hồ sơ" />) },
-  { path: '/settings', value: page('auth', <Placeholder title="Cài đặt" />) },
+  { path: '/profile', value: page('auth', <Profile />) },
+  { path: '/settings', value: page('auth', <Settings />) },
   { path: '*', value: page('public', <NotFound />) },
 ];
