@@ -3,6 +3,7 @@ import Board2D from './components/board2d/Board2D';
 import Controls from './components/ui/Controls';
 import GameOverModal from './components/ui/GameOverModal';
 import NewGameDialog from './components/ui/NewGameDialog';
+import PromotionDialog from './components/board2d/PromotionDialog';
 import AuthScreen from './components/auth/AuthScreen';
 import { useGameStore } from './store/gameStore';
 import { useAuthStore } from './store/authStore';
@@ -68,6 +69,7 @@ function GameApp() {
         </aside>
       </main>
 
+      <PromotionDialog />
       <GameOverModal />
       <NewGameDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />
     </div>

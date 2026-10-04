@@ -61,3 +61,28 @@ describe('Engine', () => {
     expect(move.length).toBeGreaterThanOrEqual(4);
   });
 });
+
+describe('Engine plays well for both colours', () => {
+  const opts = { depth: 2, randomness: 0, timeMs: 2000 };
+
+  it('white finds mate in one (Ra8#)', () => {
+    expect(findBestMove('6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1', opts)).toBe('a1a8');
+  });
+
+  it('black finds mate in one (Ra1#)', () => {
+    expect(findBestMove('r5k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1', opts)).toBe('a8a1');
+  });
+
+  it('white captures a hanging queen', () => {
+    expect(findBestMove('4k3/8/8/3q4/8/8/8/3RK3 w - - 0 1', opts)).toBe('d1d5');
+  });
+
+  it('black captures a hanging queen', () => {
+    expect(findBestMove('3rk3/8/8/8/3Q4/8/8/4K3 b - - 0 1', opts)).toBe('d8d4');
+  });
+
+  it('does not walk the queen into capture at depth 2 (white)', () => {
+    const move = findBestMove('4k3/8/8/2p5/8/8/3Q4/4K3 w - - 0 1', { ...opts, depth: 2 });
+    expect(move).not.toBe('d2d4'); // d4 is attacked by the c5 pawn
+  });
+});

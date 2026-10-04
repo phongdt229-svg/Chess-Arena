@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { GameEngine } from '@chess-arena/chess-core';
 import type { Move, GameResult, Color, Piece } from '@chess-arena/chess-core';
 import * as aiClient from '../ai/aiClient';
+import { evaluateFen } from '../ai/engine';
 
 interface GameState {
   fen: string;
@@ -36,12 +37,24 @@ interface GameActions extends GameState {
   setViewMode: (mode: '2d' | '3d') => void;
   loadFEN: (fen: string) => void;
   resign: () => void;
-  offerDraw: () => void;
+  offerDraw: () => boolean;
   maybeAiMove: () => Promise<void>;
 }
 
 let engine: GameEngine | null = null;
 let aiRequestId = 0;
+
+const cancelAi = () => {
+  aiRequestId++;
+  aiClient.cancel();
+};
+
+const scheduleAi = (delayMs: number) => {
+  setTimeout(() => {
+    const st = useGameStore.getState();
+    if (st.gameMode === 'ai' && st.result.status === 'ongoing') void st.maybeAiMove();
+  }, delayMs);
+};
 
 const createInitialState = (): GameState => ({
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -85,8 +98,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   newGame: (options = {}) => {
     const { mode = 'local', playerColor = 'w', aiLevel = 3 } = options;
-    aiRequestId++;
-    aiClient.cancel();
+    cancelAi();
 
     engine = GameEngine.create();
     const state = createInitialState();
@@ -101,15 +113,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
     };
     set(newState);
 
-    // AI moves first if in AI mode and AI is white
-    if (mode === 'ai' && playerColor === 'b') {
-      setTimeout(() => {
-        const st = get();
-        if (st.gameMode === 'ai' && !st.result || (st.result && st.result.status === 'ongoing')) {
-          get().maybeAiMove?.();
-        }
-      }, 500);
-    }
+    if (mode === 'ai' && playerColor === 'b') scheduleAi(500);
   },
 
   clickSquare: (sq) => {
@@ -163,22 +167,16 @@ export const useGameStore = create<GameActions>((set, get) => ({
       redoStack: [],
     });
 
-    // Trigger AI move if in AI mode
-    setTimeout(() => {
-      const st = get();
-      if (st.gameMode === 'ai' && (!st.result || st.result.status === 'ongoing')) {
-        get().maybeAiMove?.();
-      }
-    }, 300);
+    scheduleAi(300);
   },
 
   choosePromotion: (promotion) => {
     const state = get();
     if (!engine || !state.pendingPromotion) return;
 
-    engine.undo();
-    get().tryMove(state.pendingPromotion.from, state.pendingPromotion.to, promotion);
+    const { from, to } = state.pendingPromotion;
     set({ pendingPromotion: null });
+    get().tryMove(from, to, promotion);
   },
 
   cancelPromotion: () => {
@@ -187,43 +185,54 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   undo: () => {
     if (!engine) return;
-
-    aiRequestId++;
-    aiClient.cancel();
-
-    const move = engine.undo();
-    if (!move) return;
+    cancelAi();
 
     const state = get();
+    const undone: Move[] = [];
+    let move = engine.undo();
+    while (move) {
+      undone.push(move);
+      if (state.gameMode !== 'ai' || engine.getCurrentTurn() === state.playerColor) break;
+      move = engine.undo();
+    }
+    if (undone.length === 0) return;
+
     set({
       ...syncState(state, engine),
       lastMoveFrom: null,
       lastMoveTo: null,
       selectedSquare: null,
       legalMoves: [],
-      redoStack: [move, ...state.redoStack],
+      pendingPromotion: null,
+      redoStack: [...undone.reverse(), ...state.redoStack],
       aiThinking: false,
     });
+    scheduleAi(300);
   },
 
   redo: () => {
     const state = get();
     if (!engine || state.redoStack.length === 0) return;
+    cancelAi();
 
-    aiRequestId++;
-    aiClient.cancel();
-
-    const move = state.redoStack[0];
-    const uci = `${indexToSquare(move.from)}${indexToSquare(move.to)}${move.promotion || ''}`;
-    engine.makeMove(uci);
+    let stack = state.redoStack;
+    let last = stack[0];
+    do {
+      last = stack[0];
+      engine.makeMove(`${indexToSquare(last.from)}${indexToSquare(last.to)}${last.promotion || ''}`);
+      stack = stack.slice(1);
+    } while (state.gameMode === 'ai' && stack.length > 0 && engine.getCurrentTurn() !== state.playerColor);
 
     set({
       ...syncState(state, engine),
-      lastMoveFrom: move.from,
-      lastMoveTo: move.to,
-      redoStack: state.redoStack.slice(1),
+      lastMoveFrom: last.from,
+      lastMoveTo: last.to,
+      selectedSquare: null,
+      legalMoves: [],
+      redoStack: stack,
       aiThinking: false,
     });
+    scheduleAi(300);
   },
 
   flipBoard: () => {
@@ -238,8 +247,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
   loadFEN: (fen) => {
     if (!engine) return;
 
-    aiRequestId++;
-    aiClient.cancel();
+    cancelAi();
 
     engine.loadFEN(fen);
     const state = createInitialState();
@@ -252,15 +260,38 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   resign: () => {
     const state = get();
-    if (!engine) return;
+    if (!engine || state.result.status !== 'ongoing') return;
+    cancelAi();
 
-    const turn = engine.getCurrentTurn();
-    const winner = turn === 'w' ? 'b' : 'w';
-    set({ result: { status: 'resign', winner } });
+    const loser = state.gameMode === 'ai' ? state.playerColor : engine.getCurrentTurn();
+    set({
+      result: { status: 'resign', winner: loser === 'w' ? 'b' : 'w' },
+      aiThinking: false,
+      pendingPromotion: null,
+      selectedSquare: null,
+      legalMoves: [],
+    });
   },
 
   offerDraw: () => {
-    set({ result: { status: 'draw', reason: 'agreement' } });
+    const state = get();
+    if (!engine || state.result.status !== 'ongoing') return false;
+
+    if (state.gameMode === 'ai') {
+      const white = evaluateFen(engine.getFEN());
+      const aiScore = state.playerColor === 'w' ? -white : white;
+      if (aiScore > 50) return false; // the engine declines when it stands better than half a pawn
+    }
+
+    cancelAi();
+    set({
+      result: { status: 'draw', reason: 'agreement' },
+      aiThinking: false,
+      pendingPromotion: null,
+      selectedSquare: null,
+      legalMoves: [],
+    });
+    return true;
   },
 
   maybeAiMove: async () => {

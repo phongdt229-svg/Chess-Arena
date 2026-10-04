@@ -1,6 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
 import Square from './Square';
-import PromotionDialog from './PromotionDialog';
 import './Board2D.css';
 
 export default function Board2D() {
@@ -12,7 +11,6 @@ export default function Board2D() {
     lastMoveTo,
     inCheckSquare,
     orientation,
-    pendingPromotion,
   } = useGameStore();
 
   const squares = [];
@@ -46,8 +44,6 @@ export default function Board2D() {
           />
         ))}
       </div>
-
-      {pendingPromotion && <PromotionDialog promotion={pendingPromotion} />}
     </div>
   );
 }

@@ -6,6 +6,8 @@ export interface EngineOptions {
   timeMs?: number; // max time in ms
 }
 
+const MATE_SCORE = 30000;
+
 const PIECE_VALUES: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
 
 const PIECE_SQUARE_TABLES: Record<string, number[]> = {
@@ -68,10 +70,21 @@ function evaluatePosition(chess: Chess): number {
   // Checkmate detection
   if (chess.isCheckmate()) {
     const turn = chess.turn();
-    return turn === 'w' ? -30000 : 30000;
+    return turn === 'w' ? -MATE_SCORE : MATE_SCORE;
   }
 
   return score;
+}
+
+// Score from the point of view of the side to move (negamax convention)
+function evaluateForSideToMove(chess: Chess, depth: number): number {
+  if (chess.isCheckmate()) return -(MATE_SCORE + depth); // sooner mates score higher
+  if (chess.isGameOver()) return 0;
+  return chess.turn() === 'w' ? evaluatePosition(chess) : -evaluatePosition(chess);
+}
+
+export function evaluateFen(fen: string): number {
+  return evaluatePosition(new Chess(fen));
 }
 
 function negamax(
@@ -84,18 +97,14 @@ function negamax(
   timeLimit: number
 ): number {
   if (depth === 0 || chess.isGameOver()) {
-    return evaluatePosition(chess);
+    return evaluateForSideToMove(chess, depth);
   }
 
-  // Check time limit
   if (Date.now() - startTime > timeLimit) {
-    return evaluatePosition(chess);
+    return evaluateForSideToMove(chess, depth);
   }
 
   const moves = chess.moves({ verbose: true });
-  if (moves.length === 0) {
-    return evaluatePosition(chess);
-  }
 
   // Sort moves: captures first, promotions first
   moves.sort((a: any, b: any) => {
