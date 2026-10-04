@@ -1,0 +1,71 @@
+.gameio {
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.gameio-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.gameio-section label {
+  font-weight: 600;
+  color: #333;
+}
+
+.gameio-section textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.gameio-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.gameio-actions button {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: #e8e8e8;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gameio-actions button.primary {
+  background: #2196f3;
+  color: white;
+  margin-left: auto;
+}
+
+.gameio-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gameio-message {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.gameio-message.ok {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.gameio-message.error {
+  background: #fdecea;
+  color: #b71c1c;
+}

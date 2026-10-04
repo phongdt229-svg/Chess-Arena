@@ -45,7 +45,9 @@ interface GameActions extends GameState {
   redo: () => void;
   flipBoard: () => void;
   setViewMode: (mode: '2d' | '3d') => void;
-  loadFEN: (fen: string) => void;
+  loadFEN: (fen: string) => boolean;
+  loadPGN: (pgn: string) => boolean;
+  getPGN: () => string;
   resign: () => void;
   offerDraw: () => boolean;
   maybeAiMove: () => Promise<void>;
@@ -68,6 +70,28 @@ const clockAfterMove = (clock: ClockState, mover: Color, plies: number): ClockSt
   const key = mover === 'w' ? 'whiteMs' : 'blackMs';
   return { ...clock, [key]: clock[key] + clock.incrementMs };
 };
+
+// Replace the running game with an imported one, keeping view preferences; imports are always local games
+function adoptImportedGame(
+  candidate: GameEngine,
+  set: (partial: Partial<GameActions>) => void,
+  get: () => GameActions,
+) {
+  cancelAi();
+  engine = candidate;
+  const { viewMode, orientation } = get();
+  const synced = syncState(createInitialState(), candidate);
+  const last = synced.history?.[synced.history.length - 1];
+  lastTickAt = Date.now();
+  set({
+    ...createInitialState(),
+    ...synced,
+    viewMode,
+    orientation,
+    lastMoveFrom: last ? last.from : null,
+    lastMoveTo: last ? last.to : null,
+  });
+}
 
 const scheduleAi = (delayMs: number) => {
   setTimeout(() => {
@@ -270,18 +294,24 @@ export const useGameStore = create<GameActions>((set, get) => ({
   },
 
   loadFEN: (fen) => {
-    if (!engine) return;
-
-    cancelAi();
-
-    engine.loadFEN(fen);
-    const state = createInitialState();
-    set({
-      ...state,
-      ...syncState(state, engine),
-      aiThinking: false,
-    });
+    const candidate = GameEngine.create();
+    try {
+      candidate.loadFEN(fen.trim());
+    } catch {
+      return false;
+    }
+    adoptImportedGame(candidate, set, get);
+    return true;
   },
+
+  loadPGN: (pgn) => {
+    const candidate = GameEngine.create();
+    if (!pgn.trim() || !candidate.loadPGN(pgn)) return false;
+    adoptImportedGame(candidate, set, get);
+    return true;
+  },
+
+  getPGN: () => (engine ? engine.toPGN() : ''),
 
   resign: () => {
     const state = get();
