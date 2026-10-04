@@ -123,3 +123,17 @@
     padding: 1.25rem;
   }
 }
+
+.auth-home {
+  color: inherit;
+  text-decoration: none;
+}
+
+.auth-back {
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.auth-back a {
+  color: #4654b8;
+}

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { Link, navigate, safeNext, useLocation } from '../../router/router';
 import './AuthScreen.css';
 
 type Tab = 'login' | 'register';
@@ -25,9 +26,10 @@ function validate(tab: Tab, username: string, password: string, confirm: string)
   return null;
 }
 
-export default function AuthScreen() {
+export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab }) {
+  const { search } = useLocation();
   const { login, register, busy, error, clearError } = useAuthStore();
-  const [tab, setTab] = useState<Tab>('login');
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -35,6 +37,7 @@ export default function AuthScreen() {
 
   const switchTab = (next: Tab) => {
     setTab(next);
+    navigate(`/${next}${search.toString() ? `?${search}` : ''}`, { replace: true });
     setLocalError(null);
     clearError();
   };
@@ -45,7 +48,8 @@ export default function AuthScreen() {
     const problem = validate(tab, username, password, confirm);
     setLocalError(problem);
     if (problem) return;
-    await (tab === 'login' ? login : register)(username, password);
+    const ok = await (tab === 'login' ? login : register)(username, password);
+    if (ok) navigate(safeNext(search.get('next')), { replace: true });
   };
 
   const message = localError ?? (error ? ERROR_TEXT[error] ?? ERROR_TEXT.SERVER_ERROR : null);
@@ -53,7 +57,11 @@ export default function AuthScreen() {
   return (
     <div className="auth-screen">
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
-        <h1 className="auth-title">♟ Chess Arena</h1>
+        <h1 className="auth-title">
+          <Link to="/" className="auth-home">
+            ♟ Chess Arena
+          </Link>
+        </h1>
         <p className="auth-subtitle">Đăng nhập để bắt đầu chơi</p>
 
         <div className="auth-tabs" role="tablist">
@@ -111,6 +119,9 @@ export default function AuthScreen() {
         <button type="submit" className="auth-submit" disabled={busy}>
           {busy ? 'Đang xử lý…' : tab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
         </button>
+        <p className="auth-back">
+          <Link to="/">← Về trang chủ</Link>
+        </p>
       </form>
     </div>
   );

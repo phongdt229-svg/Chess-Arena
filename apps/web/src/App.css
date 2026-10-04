@@ -230,3 +230,9 @@
     flex-wrap: wrap;
   }
 }
+
+.header-home,
+.header-user {
+  color: inherit;
+  text-decoration: none;
+}

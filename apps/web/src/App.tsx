@@ -1,110 +1,39 @@
-import { useEffect, lazy, Suspense, useState } from 'react';
-import Board2D from './components/board2d/Board2D';
-import Controls from './components/ui/Controls';
-import GameOverModal from './components/ui/GameOverModal';
-import NewGameDialog from './components/ui/NewGameDialog';
-import PromotionDialog from './components/board2d/PromotionDialog';
-import AuthScreen from './components/auth/AuthScreen';
-import { useGameStore } from './store/gameStore';
+import { useEffect, type ReactElement } from 'react';
+import SiteLayout from './site/SiteLayout';
+import { ROUTES, type Access } from './routes';
+import { matchRoute, navigate, safeNext, useLocation } from './router/router';
 import { useAuthStore } from './store/authStore';
-import ResumeDialog from './components/ui/ResumeDialog';
-import { useGameSounds } from './audio/useGameSounds';
-import { useAutoSave } from './persistence/useAutoSave';
-import { clearSave, readSave, type SavedGame } from './persistence/savedGame';
-import './App.css';
 
-const Board3D = lazy(() => import('./components/board3d/Board3D'));
-
-function GameApp() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const { viewMode, setViewMode, newGame, resign, result, restoreGame } = useGameStore();
-  const { user, logout } = useAuthStore();
-  useGameSounds();
-
-  const [resumeOffer, setResumeOffer] = useState<SavedGame | null>(() => (user ? readSave(user.id) : null));
-  useAutoSave(user?.id, resumeOffer === null);
-
-  useEffect(() => {
-    newGame({ mode: 'local' });
-  }, [newGame]);
-
-  const resume = () => {
-    if (resumeOffer && !restoreGame(resumeOffer) && user) clearSave(user.id);
-    setResumeOffer(null);
-  };
-
-  const discard = () => {
-    if (user) clearSave(user.id);
-    setResumeOffer(null);
-  };
-
-  const handleNewGame = () => {
-    setDialogOpen(true);
-  };
-
-  return (
-    <div className="app">
-      <header className="app-header">
-        <h1>♟ Chess Arena</h1>
-        <div className="header-controls">
-          <span className="header-user" title={`Elo ${user?.elo ?? ''}`}>
-            {user?.username}
-          </span>
-          <button onClick={handleNewGame} className="btn-primary">
-            New Game
-          </button>
-          {viewMode === '2d' && (
-            <button onClick={() => setViewMode('3d')} className="btn-secondary" title="Switch to 3D">
-              3D View
-            </button>
-          )}
-          {viewMode === '3d' && (
-            <button onClick={() => setViewMode('2d')} className="btn-secondary" title="Switch to 2D">
-              2D View
-            </button>
-          )}
-          <button onClick={resign} className="btn-danger" disabled={result.status !== 'ongoing'}>
-            Resign
-          </button>
-          <button onClick={logout} className="btn-secondary btn-logout" title="Đăng xuất">
-            Đăng xuất
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        <div className="board-container">
-          {viewMode === '2d' && <Board2D />}
-          {viewMode === '3d' && (
-            <Suspense fallback={<div className="loading">Loading 3D board...</div>}>
-              <Board3D />
-            </Suspense>
-          )}
-        </div>
-
-        <aside className="sidebar">
-          <Controls onNewGameClick={handleNewGame} />
-        </aside>
-      </main>
-
-      {resumeOffer && <ResumeDialog save={resumeOffer} onResume={resume} onDiscard={discard} />}
-      <PromotionDialog />
-      <GameOverModal />
-      <NewGameDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />
-    </div>
-  );
+// Decides what a visitor may see for a route; redirects happen in an effect so render stays pure
+export function redirectFor(access: Access, status: 'loading' | 'anon' | 'authed', path: string, next: string | null): string | null {
+  if (access === 'auth' && status === 'anon') return `/login?next=${encodeURIComponent(path)}`;
+  if (access === 'guest' && status === 'authed') return safeNext(next);
+  return null;
 }
 
-function App() {
-  const { status, init } = useAuthStore();
+function Gate({ access, children }: { access: Access; children: ReactElement }) {
+  const { pathname, search } = useLocation();
+  const status = useAuthStore((s) => s.status);
+  const target = redirectFor(access, status, pathname + (search.size ? `?${search}` : ''), search.get('next'));
 
   useEffect(() => {
-    init();
+    if (target) navigate(target, { replace: true });
+  }, [target]);
+
+  if (target) return null;
+  if (status === 'loading' && access !== 'public') return <div className="auth-loading">Đang tải…</div>;
+  return children;
+}
+
+export default function App() {
+  const init = useAuthStore((s) => s.init);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    void init();
   }, [init]);
 
-  if (status === 'loading') return <div className="auth-loading">Đang tải…</div>;
-  if (status === 'anon') return <AuthScreen />;
-  return <GameApp />;
+  const route = matchRoute(pathname, ROUTES)!;
+  const content = <Gate access={route.access}>{route.element}</Gate>;
+  return route.layout ? <SiteLayout>{content}</SiteLayout> : content;
 }
-
-export default App;
