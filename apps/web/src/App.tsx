@@ -3,6 +3,7 @@ import SiteLayout from './site/SiteLayout';
 import { ROUTES, type Access } from './routes';
 import { matchRoute, navigate, safeNext, useLocation } from './router/router';
 import { useAuthStore } from './store/authStore';
+import AdConsent from './ads/AdConsent';
 
 // Decides what a visitor may see for a route; redirects happen in an effect so render stays pure
 export function redirectFor(access: Access, status: 'loading' | 'anon' | 'authed', path: string, next: string | null): string | null {
@@ -35,5 +36,10 @@ export default function App() {
 
   const route = matchRoute(pathname, ROUTES)!;
   const content = <Gate access={route.access}>{route.element}</Gate>;
-  return route.layout ? <SiteLayout>{content}</SiteLayout> : content;
+  return (
+    <>
+      {route.layout ? <SiteLayout>{content}</SiteLayout> : content}
+      <AdConsent />
+    </>
+  );
 }

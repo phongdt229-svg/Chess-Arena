@@ -4,6 +4,7 @@ import StaticBoard from '../StaticBoard';
 import { OPENINGS, movetext } from '../data/openings';
 import { navigate } from '../../router/router';
 import { usePageMeta } from '../usePageMeta';
+import AdSlot from '../../ads/AdSlot';
 import './Openings.css';
 
 export default function Openings() {
@@ -99,6 +100,8 @@ export default function Openings() {
           </div>
         </section>
       </div>
+
+      <AdSlot placement="content" />
     </div>
   );
 }

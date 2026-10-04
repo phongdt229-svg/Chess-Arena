@@ -8,6 +8,7 @@ import { PUZZLES, type Puzzle } from '../data/puzzles';
 import { forcedMateMoves, stubbornestReply } from '../puzzleSolver';
 import { markSolved, readSolved } from '../puzzleProgress';
 import { usePageMeta } from '../usePageMeta';
+import AdSlot from '../../ads/AdSlot';
 import './Puzzles.css';
 
 type Status = 'solving' | 'wrong' | 'solved';
@@ -208,6 +209,8 @@ export default function Puzzles() {
 
         <PuzzleBoard key={puzzle.id} puzzle={puzzle} onSolved={onSolved} onNext={onNext} />
       </div>
+
+      <AdSlot placement="content" />
     </div>
   );
 }

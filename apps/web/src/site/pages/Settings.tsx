@@ -1,5 +1,7 @@
 import { TIME_CONTROLS } from '../../store/clock';
 import { useSettingsStore } from '../../store/settingsStore';
+import { adsEnabled } from '../../ads/config';
+import { useConsentStore } from '../../ads/consentStore';
 import { usePageMeta } from '../usePageMeta';
 import './Settings.css';
 
@@ -8,6 +10,7 @@ const LEVELS = ['Beginner', 'Easy', 'Medium', 'Hard', 'Very Hard', 'Expert'];
 export default function Settings() {
   usePageMeta('Settings', 'Adjust sound, display mode and the defaults used when you start a new game.');
   const s = useSettingsStore();
+  const { consent, setConsent } = useConsentStore();
 
   return (
     <div className="container narrow">
@@ -81,6 +84,23 @@ export default function Settings() {
           </select>
         </label>
       </section>
+
+      {adsEnabled() && (
+        <section className="card settings-card">
+          <h2>Advertising</h2>
+          <label className="settings-row">
+            <span>
+              <strong>Show ads</strong>
+              <small>Ads come from Google AdSense and use cookies. If off, no ad scripts are loaded.</small>
+            </span>
+            <select value={consent ?? 'undecided'} onChange={(e) => setConsent(e.target.value as 'granted' | 'denied')}>
+              {consent === null && <option value="undecided" disabled>Not chosen yet</option>}
+              <option value="granted">Allow ads</option>
+              <option value="denied">No ads</option>
+            </select>
+          </label>
+        </section>
+      )}
 
       <button className="site-btn outline" onClick={s.reset}>
         Restore defaults

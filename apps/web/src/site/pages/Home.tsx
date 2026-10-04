@@ -2,6 +2,7 @@ import { Link } from '../../router/router';
 import { useAuthStore } from '../../store/authStore';
 import StaticBoard from '../StaticBoard';
 import { usePageMeta } from '../usePageMeta';
+import AdSlot from '../../ads/AdSlot';
 import './Home.css';
 
 const FEATURES = [
@@ -84,6 +85,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <div className="container" style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <AdSlot placement="home" />
+      </div>
 
       <section className="home-band">
         <div className="container">

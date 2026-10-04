@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
@@ -89,8 +89,20 @@ function devAuthMock(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), devAuthMock()],
+// AdSense requires /ads.txt; generate it from the publisher id so it can never drift from the build config
+function adsTxt(publisherId: string | undefined): Plugin {
+  const match = publisherId?.match(/^ca-(pub-\d{10,20})$/);
+  return {
+    name: 'ads-txt',
+    generateBundle() {
+      if (!match) return;
+      this.emitFile({ type: 'asset', fileName: 'ads.txt', source: `google.com, ${match[1]}, DIRECT, f08c47fec0942fa0\n` });
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
+  plugins: [react(), devAuthMock(), adsTxt(loadEnv(mode, process.cwd(), 'VITE_').VITE_ADSENSE_CLIENT)],
   resolve: {
     alias: {
       '@chess-core': path.resolve(__dirname, '../../packages/chess-core/src'),
@@ -110,4 +122,4 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
   },
-});
+}));

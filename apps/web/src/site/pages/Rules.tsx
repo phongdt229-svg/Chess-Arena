@@ -2,6 +2,7 @@ import StaticBoard from '../StaticBoard';
 import { moveTargets } from '../chessHelpers';
 import { usePageMeta } from '../usePageMeta';
 import { Link } from '../../router/router';
+import AdSlot from '../../ads/AdSlot';
 import './Rules.css';
 
 interface Diagram {
@@ -103,6 +104,8 @@ export default function Rules() {
         Every piece captures by moving onto an enemy piece&apos;s square, which removes it from the board. No piece may move onto a square
         occupied by a piece of its own colour.
       </p>
+
+      <AdSlot placement="content" />
 
       <h2>Special moves</h2>
       <div className="rules-grid">

@@ -10,6 +10,7 @@ import { Link, navigate, useLocation } from '../router/router';
 import ResumeDialog from '../components/ui/ResumeDialog';
 import { useGameSounds } from '../audio/useGameSounds';
 import { usePageMeta } from '../site/usePageMeta';
+import AdSlot from '../ads/AdSlot';
 import { useAutoSave } from '../persistence/useAutoSave';
 import { useRecordStats } from '../persistence/useRecordStats';
 import { useSettingsStore } from '../store/settingsStore';
@@ -109,6 +110,7 @@ export default function GameApp() {
 
         <aside className="sidebar">
           <Controls onNewGameClick={handleNewGame} />
+          <AdSlot placement="game" desktopOnly />
         </aside>
       </main>
 

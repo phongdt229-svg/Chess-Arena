@@ -1,11 +1,15 @@
 import { Link } from '../../router/router';
 import { usePageMeta } from '../usePageMeta';
+import AdSlot from '../../ads/AdSlot';
+import { adsEnabled } from '../../ads/config';
 import './Guide.css';
 
 const FAQ: { q: string; a: React.ReactNode }[] = [
   {
     q: 'Does Chess Arena cost anything?',
-    a: 'No. The site has no payments and no ads.',
+    a: adsEnabled()
+      ? 'No. The site is free to use and is supported by ads. You can turn ads off in Settings.'
+      : 'No. The site has no payments and no ads.',
   },
   {
     q: 'How strong is the computer?',
@@ -68,6 +72,8 @@ export default function Guide() {
         <li>When a pawn reaches the last rank, a dialog asks which piece to promote to.</li>
         <li>The king&apos;s square turns red when it is in check, and the two squares of the last move are highlighted.</li>
       </ul>
+
+      <AdSlot placement="content" />
 
       <h2>3. The 3D board</h2>
       <p>

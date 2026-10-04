@@ -1,8 +1,10 @@
 import { Link } from '../../router/router';
 import { usePageMeta } from '../usePageMeta';
+import { adsEnabled } from '../../ads/config';
 
 export default function Privacy() {
   usePageMeta('Privacy policy', 'What data Chess Arena stores and how it is used.');
+  const ads = adsEnabled();
   return (
     <div className="container narrow prose">
       <h1 className="page-title">Privacy policy</h1>
@@ -25,7 +27,24 @@ export default function Privacy() {
       <p>This data lives entirely on your device (localStorage) and is not sent to the server. You can remove it at any time by clearing the site data in your browser.</p>
 
       <h2>Cookies, tracking and third parties</h2>
-      <p>Chess Arena does not use tracking cookies, analytics or advertising, and does not share your data with third parties.</p>
+      {ads ? (
+        <>
+          <p>
+            Chess Arena shows advertising provided by Google AdSense. Only if you press <strong>Accept</strong> on the advertising notice,
+            Google&apos;s ad script is loaded; it may set cookies and receive technical information such as your IP address and browser
+            details to serve and measure ads. We ask Google to show non-personalised ads. If you press <strong>Decline</strong>, no ad script is
+            loaded and no ad cookies are set. You can change your choice at any time in <Link to="/settings">Settings</Link> (after logging
+            in). See{' '}
+            <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">
+              how Google uses data from sites that use its services
+            </a>
+            .
+          </p>
+          <p>Apart from advertising, Chess Arena uses no analytics or tracking cookies and does not share your data with anyone.</p>
+        </>
+      ) : (
+        <p>Chess Arena does not use tracking cookies, analytics or advertising, and does not share your data with third parties.</p>
+      )}
 
       <h2>Security</h2>
       <p>Passwords are hashed with PHP&apos;s standard algorithm, session tokens are stored only as hashes, and all database queries use prepared statements. No system is perfectly secure, so please use a long password that you do not use anywhere else.</p>
