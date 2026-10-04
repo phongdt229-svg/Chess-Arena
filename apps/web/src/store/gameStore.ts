@@ -168,7 +168,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   clickSquare: (sq) => {
     const state = get();
-    if (!engine || state.pendingPromotion || state.aiThinking) return;
+    if (!engine || state.pendingPromotion || state.aiThinking || state.result.status !== 'ongoing') return;
 
     // In AI mode, only allow moves by the player
     if (state.gameMode === 'ai' && engine.getCurrentTurn() !== state.playerColor) return;
@@ -201,7 +201,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
   },
 
   tryMove: (from, to, promotion) => {
-    if (!engine) return;
+    if (!engine || get().result.status !== 'ongoing') return;
 
     const uci = promotion ? `${indexToSquare(from)}${indexToSquare(to)}${promotion}` : `${indexToSquare(from)}${indexToSquare(to)}`;
     const move = engine.makeMove(uci);

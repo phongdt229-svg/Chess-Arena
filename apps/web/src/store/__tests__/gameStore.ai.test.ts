@@ -155,3 +155,16 @@ describe('Promotion', () => {
     expect(state().board[sq('a7')]).toMatchObject({ type: 'p' });
   });
 });
+
+describe('Finished games are frozen', () => {
+  it('no moves after resign or timeout, and the result is not overwritten', () => {
+    state().newGame({ mode: 'local' });
+    state().tryMove(sq('e2'), sq('e4'));
+    state().resign();
+    state().tryMove(sq('e7'), sq('e5'));
+    state().clickSquare(sq('d7'));
+    expect(state().history).toHaveLength(1);
+    expect(state().selectedSquare).toBeNull();
+    expect(state().result.status).toBe('resign');
+  });
+});

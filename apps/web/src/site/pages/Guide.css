@@ -1,0 +1,27 @@
+.faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faq-item {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 1rem;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  padding: 0.85rem 0;
+  font-weight: 600;
+}
+
+.faq-item[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.faq-answer {
+  padding: 0.8rem 0 0.2rem;
+  color: var(--muted);
+}

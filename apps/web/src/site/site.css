@@ -258,3 +258,13 @@
     font-size: 1.6rem;
   }
 }
+
+.legal-note {
+  margin-top: 2rem;
+  padding: 0.8rem 1rem;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #6d5300;
+}
