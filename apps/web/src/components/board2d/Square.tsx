@@ -50,6 +50,7 @@ export default function Square({
   return (
     <div
       className={className}
+      data-square={`${String.fromCharCode(97 + file)}${rank + 1}`}
       onClick={handleClick}
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}

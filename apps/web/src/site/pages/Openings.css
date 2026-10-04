@@ -1,0 +1,161 @@
+.openings-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.openings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.openings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+}
+
+.openings-item:hover {
+  border-color: var(--brand);
+}
+
+.openings-item.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
+.openings-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.openings-eco {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.openings-detail {
+  display: grid;
+  grid-template-columns: minmax(240px, 380px) 1fr;
+  gap: 1.5rem;
+}
+
+.openings-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.openings-controls button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 8px;
+  background: #eceef6;
+  font-size: 1rem;
+}
+
+.openings-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.openings-controls span {
+  min-width: 3.2rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.openings-info h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.openings-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.openings-tags span {
+  background: #eceef6;
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--brand-dark);
+}
+
+.openings-moves {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.openings-moves button {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: #f1f2f8;
+  font-family: 'Courier New', monospace;
+  font-size: 0.92rem;
+}
+
+.openings-moves li.current button {
+  background: var(--brand);
+  color: white;
+}
+
+.openings-info p {
+  margin-bottom: 0.8rem;
+}
+
+.openings-info dt {
+  font-weight: 700;
+  margin-top: 0.4rem;
+}
+
+.openings-info dd {
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+@media (max-width: 960px) {
+  .openings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .openings-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+  }
+
+  .openings-item {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .openings-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .openings-board {
+    max-width: 380px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}

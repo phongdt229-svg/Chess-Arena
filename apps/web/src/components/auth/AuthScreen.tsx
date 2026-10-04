@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { Link, navigate, safeNext, useLocation } from '../../router/router';
+import { Link, navigate, useLocation } from '../../router/router';
 import './AuthScreen.css';
 
 type Tab = 'login' | 'register';
@@ -48,8 +48,8 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
     const problem = validate(tab, username, password, confirm);
     setLocalError(problem);
     if (problem) return;
-    const ok = await (tab === 'login' ? login : register)(username, password);
-    if (ok) navigate(safeNext(search.get('next')), { replace: true });
+    // On success the guest-route gate in App redirects to ?next=, so nothing else to do here
+    await (tab === 'login' ? login : register)(username, password);
   };
 
   const message = localError ?? (error ? ERROR_TEXT[error] ?? ERROR_TEXT.SERVER_ERROR : null);

@@ -1,0 +1,147 @@
+.puzzles-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.puzzles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.puzzles-item {
+  display: grid;
+  grid-template-columns: 1.9rem 1fr;
+  grid-template-areas: 'check title' 'check mate';
+  column-gap: 0.7rem;
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+}
+
+.puzzles-item.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(91, 107, 214, 0.25);
+}
+
+.puzzles-check {
+  grid-area: check;
+  align-self: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: #eceef6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.puzzles-item.done .puzzles-check {
+  background: #4caf50;
+  color: white;
+}
+
+.puzzles-title {
+  grid-area: title;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.puzzles-mate {
+  grid-area: mate;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.puzzle-play {
+  display: grid;
+  grid-template-columns: minmax(280px, 560px) 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.puzzle-board {
+  position: relative;
+  width: 100%;
+  background: white;
+  border-radius: 10px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.puzzle-board .board-2d {
+  max-width: none;
+  max-height: none;
+}
+
+.puzzle-board .piece {
+  font-size: min(6vw, 3.3rem);
+}
+
+.puzzle-panel h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.puzzle-theme {
+  color: var(--muted);
+  margin: 0.3rem 0 0.9rem;
+}
+
+.puzzle-status {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #eceef6;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.puzzle-status.wrong {
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+.puzzle-status.solved {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.puzzle-answer {
+  margin-bottom: 0.8rem;
+}
+
+.puzzle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.puzzle-actions .site-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1000px) {
+  .puzzles-layout,
+  .puzzle-play {
+    grid-template-columns: 1fr;
+  }
+
+  .puzzles-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+  }
+
+  .puzzles-item {
+    flex: 0 0 auto;
+    min-width: 170px;
+  }
+}
