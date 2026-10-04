@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   elo           SMALLINT     NOT NULL DEFAULT 1200,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_users_username (username)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS auth_tokens (
   token_hash CHAR(64)        NOT NULL PRIMARY KEY,

@@ -2,12 +2,37 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 // Dev-only stand-in for apps/api (PHP). Same routes, JSON shape and error codes; users live in memory.
+// Accounts are kept in a git-ignored file so they survive dev-server restarts (editing this config restarts it)
+const DEV_DB = path.resolve(__dirname, '.dev-auth.json');
+
 function devAuthMock(): Plugin {
-  const users = new Map<string, { id: number; hash: string; salt: string }>();
-  const tokens = new Map<string, string>();
+  type DevUser = { id: number; name: string; hash: string; salt: string };
+  const users = new Map<string, DevUser>(); // keyed by lower-case username, like the case-insensitive MySQL column
+  const tokens = new Map<string, string>(); // token -> lower-case username
   let nextId = 1;
+
+  try {
+    if (existsSync(DEV_DB)) {
+      const saved = JSON.parse(readFileSync(DEV_DB, 'utf8'));
+      for (const u of saved.users ?? []) {
+        users.set(u.name.toLowerCase(), u);
+        nextId = Math.max(nextId, u.id + 1);
+      }
+      for (const [t, name] of saved.tokens ?? []) tokens.set(t, name);
+    }
+  } catch {
+    // a corrupt dev database is simply ignored
+  }
+  const persist = () => {
+    try {
+      writeFileSync(DEV_DB, JSON.stringify({ users: [...users.values()], tokens: [...tokens] }));
+    } catch {
+      // read-only checkout: accounts then last until the server restarts
+    }
+  };
 
   const hash = (pw: string, salt: string) => scryptSync(pw, salt, 32).toString('hex');
   const send = (res: any, status: number, payload: unknown) => {
@@ -16,7 +41,7 @@ function devAuthMock(): Plugin {
     res.end(JSON.stringify(payload));
   };
   const fail = (res: any, status: number, error: string) => send(res, status, { ok: false, error });
-  const publicUser = (name: string) => ({ id: users.get(name)!.id, username: name, elo: 1200 });
+  const publicUser = (key: string) => ({ id: users.get(key)!.id, username: users.get(key)!.name, elo: 1200 });
   const readBody = (req: any): Promise<any> =>
     new Promise((resolve) => {
       let raw = '';
@@ -36,6 +61,7 @@ function devAuthMock(): Plugin {
   const issue = (name: string) => {
     const t = randomBytes(32).toString('hex');
     tokens.set(t, name);
+    persist();
     return t;
   };
 
@@ -56,6 +82,7 @@ function devAuthMock(): Plugin {
 
         if (route === 'logout.php') {
           tokens.delete(bearer(req) ?? '');
+          persist();
           return send(res, 200, { ok: true, data: {} });
         }
 
@@ -67,20 +94,22 @@ function devAuthMock(): Plugin {
           ) {
             return fail(res, 400, 'VALIDATION');
           }
-          if (users.has(username)) return fail(res, 409, 'USERNAME_TAKEN');
+          const key = username.toLowerCase();
+          if (users.has(key)) return fail(res, 409, 'USERNAME_TAKEN');
           const salt = randomBytes(16).toString('hex');
-          users.set(username, { id: nextId++, salt, hash: hash(password, salt) });
-          return send(res, 201, { ok: true, data: { token: issue(username), user: publicUser(username) } });
+          users.set(key, { id: nextId++, name: username, salt, hash: hash(password, salt) });
+          return send(res, 201, { ok: true, data: { token: issue(key), user: publicUser(key) } });
         }
 
         if (route === 'login.php') {
           const { username, password } = body ?? {};
-          const u = typeof username === 'string' ? users.get(username) : undefined;
+          const key = typeof username === 'string' ? username.toLowerCase() : '';
+          const u = users.get(key);
           const ok =
             u && typeof password === 'string' &&
             timingSafeEqual(Buffer.from(hash(password, u.salt)), Buffer.from(u.hash));
           if (!ok) return fail(res, 401, 'INVALID_CREDENTIALS');
-          return send(res, 200, { ok: true, data: { token: issue(username), user: publicUser(username) } });
+          return send(res, 200, { ok: true, data: { token: issue(key), user: publicUser(key) } });
         }
 
         return fail(res, 404, 'NOT_FOUND');
