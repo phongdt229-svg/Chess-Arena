@@ -7,20 +7,36 @@ import PromotionDialog from './components/board2d/PromotionDialog';
 import AuthScreen from './components/auth/AuthScreen';
 import { useGameStore } from './store/gameStore';
 import { useAuthStore } from './store/authStore';
+import ResumeDialog from './components/ui/ResumeDialog';
 import { useGameSounds } from './audio/useGameSounds';
+import { useAutoSave } from './persistence/useAutoSave';
+import { clearSave, readSave, type SavedGame } from './persistence/savedGame';
 import './App.css';
 
 const Board3D = lazy(() => import('./components/board3d/Board3D'));
 
 function GameApp() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { viewMode, setViewMode, newGame, resign, result } = useGameStore();
+  const { viewMode, setViewMode, newGame, resign, result, restoreGame } = useGameStore();
   const { user, logout } = useAuthStore();
   useGameSounds();
+
+  const [resumeOffer, setResumeOffer] = useState<SavedGame | null>(() => (user ? readSave(user.id) : null));
+  useAutoSave(user?.id, resumeOffer === null);
 
   useEffect(() => {
     newGame({ mode: 'local' });
   }, [newGame]);
+
+  const resume = () => {
+    if (resumeOffer && !restoreGame(resumeOffer) && user) clearSave(user.id);
+    setResumeOffer(null);
+  };
+
+  const discard = () => {
+    if (user) clearSave(user.id);
+    setResumeOffer(null);
+  };
 
   const handleNewGame = () => {
     setDialogOpen(true);
@@ -71,6 +87,7 @@ function GameApp() {
         </aside>
       </main>
 
+      {resumeOffer && <ResumeDialog save={resumeOffer} onResume={resume} onDiscard={discard} />}
       <PromotionDialog />
       <GameOverModal />
       <NewGameDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />

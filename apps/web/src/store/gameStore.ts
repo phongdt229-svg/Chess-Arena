@@ -4,6 +4,7 @@ import type { Move, GameResult, Color, Piece } from '@chess-arena/chess-core';
 import * as aiClient from '../ai/aiClient';
 import { evaluateFen } from '../ai/engine';
 import { NO_CLOCK, makeClock, type ClockState, type TimeControl } from './clock';
+import type { SavedGame } from '../persistence/savedGame';
 
 export interface NewGameOptions {
   mode?: 'local' | 'ai';
@@ -48,6 +49,8 @@ interface GameActions extends GameState {
   loadFEN: (fen: string) => boolean;
   loadPGN: (pgn: string) => boolean;
   getPGN: () => string;
+  serializeGame: () => SavedGame | null;
+  restoreGame: (save: SavedGame) => boolean;
   resign: () => void;
   offerDraw: () => boolean;
   maybeAiMove: () => Promise<void>;
@@ -312,6 +315,52 @@ export const useGameStore = create<GameActions>((set, get) => ({
   },
 
   getPGN: () => (engine ? engine.toPGN() : ''),
+
+  serializeGame: () => {
+    if (!engine) return null;
+    const { gameMode, playerColor, aiLevel, orientation, clock } = get();
+    return {
+      v: 1,
+      pgn: engine.toPGN(),
+      fen: engine.getFEN(),
+      mode: gameMode,
+      playerColor,
+      aiLevel,
+      orientation,
+      clock,
+      savedAt: Date.now(),
+    };
+  },
+
+  restoreGame: (save) => {
+    // Prefer the PGN (keeps move history); fall back to the bare position if it does not reproduce the saved FEN
+    let candidate = GameEngine.create();
+    if (!save.pgn.trim() || !candidate.loadPGN(save.pgn) || candidate.getFEN() !== save.fen) {
+      candidate = GameEngine.create();
+      try {
+        candidate.loadFEN(save.fen);
+      } catch {
+        return false;
+      }
+    }
+
+    adoptImportedGame(candidate, set, get);
+    set({
+      gameMode: save.mode,
+      playerColor: save.playerColor,
+      aiLevel: save.aiLevel,
+      orientation: save.orientation,
+      clock: save.clock,
+      lastOptions: {
+        mode: save.mode,
+        playerColor: save.playerColor,
+        aiLevel: save.aiLevel,
+        timeControl: save.clock.enabled ? { baseMs: save.clock.baseMs, incrementMs: save.clock.incrementMs } : null,
+      },
+    });
+    scheduleAi(500);
+    return true;
+  },
 
   resign: () => {
     const state = get();
