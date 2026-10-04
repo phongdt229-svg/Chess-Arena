@@ -5,31 +5,31 @@ import { usePageMeta } from '../usePageMeta';
 import './Home.css';
 
 const FEATURES = [
-  { icon: '🎲', title: 'Bàn cờ 2D và 3D', text: 'Chuyển tức thì giữa bàn 2D gọn gàng và bàn 3D xoay được, ván cờ đang chơi không bị mất.' },
-  { icon: '🤖', title: 'Chơi với máy', text: 'Sáu cấp độ từ người mới đến khó, máy tính chạy ngay trên trình duyệt của bạn, không cần chờ máy chủ.' },
-  { icon: '⏱️', title: 'Đồng hồ thi đấu', text: 'Các mức 1, 3, 5, 10, 15 phút, có cộng thêm giây. Hết giờ là thua như cờ thật.' },
-  { icon: '📋', title: 'Nhập / xuất FEN, PGN', text: 'Dán thế cờ hay ván đấu có sẵn để phân tích, hoặc tải ván của bạn về dưới dạng PGN.' },
-  { icon: '💾', title: 'Lưu và chơi tiếp', text: 'Ván dang dở được tự lưu theo tài khoản, lần sau mở web là chơi tiếp được ngay.' },
-  { icon: '📱', title: 'Dùng được trên điện thoại', text: 'Giao diện tự co giãn theo màn hình, thao tác chạm để chọn và đi quân.' },
+  { icon: '🎲', title: '2D and 3D boards', text: 'Switch instantly between a clean 2D board and a 3D board you can rotate. Your game carries over.' },
+  { icon: '🤖', title: 'Play the computer', text: 'Six levels from beginner to expert. The engine runs right in your browser, so there is no server to wait for.' },
+  { icon: '⏱️', title: 'Tournament clocks', text: '1, 3, 5, 10 and 15 minute games, with optional increments. Run out of time and you lose, just like over the board.' },
+  { icon: '📋', title: 'Import / export FEN and PGN', text: 'Paste a position or a full game to analyse it, or download your own game as a PGN file.' },
+  { icon: '💾', title: 'Save and resume', text: 'Unfinished games are saved to your account automatically, so you can pick up where you left off.' },
+  { icon: '📱', title: 'Works on your phone', text: 'The layout adapts to any screen and you can move pieces with a tap.' },
 ];
 
 const STEPS = [
-  { n: 1, title: 'Tạo tài khoản', text: 'Chỉ cần tên đăng nhập và mật khẩu, không cần email.' },
-  { n: 2, title: 'Chọn cách chơi', text: 'Hai người trên một máy hoặc đấu với máy, chọn màu quân và đồng hồ.' },
-  { n: 3, title: 'Bắt đầu đi quân', text: 'Bấm chọn quân rồi bấm ô đến, hoặc kéo thả. Ô hợp lệ được tô sáng.' },
+  { n: 1, title: 'Create an account', text: 'All you need is a username and a password. No email required.' },
+  { n: 2, title: 'Choose how to play', text: 'Two players on one device or against the computer. Pick your colour and a clock.' },
+  { n: 3, title: 'Make your first move', text: 'Click a piece, then click where it should go, or drag and drop. Legal squares light up.' },
 ];
 
 const LEARN = [
-  { to: '/rules', title: 'Luật cờ vua', text: 'Cách đi từng quân, nhập thành, bắt tốt qua đường, phong cấp và các cách kết thúc ván.' },
-  { to: '/openings', title: 'Khai cuộc', text: 'Mười khai cuộc phổ biến, xem từng nước đi và ý tưởng chính của mỗi bên.' },
-  { to: '/puzzles', title: 'Bài tập cờ thế', text: 'Luyện tìm nước chiếu hết trong một hoặc hai nước. Theo dõi số bài đã giải.' },
+  { to: '/rules', title: 'Rules of chess', text: 'How every piece moves, castling, en passant, promotion and the ways a game can end.' },
+  { to: '/openings', title: 'Openings', text: 'Ten popular openings. Step through the moves and learn the main ideas for each side.' },
+  { to: '/puzzles', title: 'Puzzles', text: 'Practise finding checkmate in one or two moves and track the puzzles you have solved.' },
 ];
 
 export default function Home() {
   const authed = useAuthStore((s) => s.status === 'authed');
   usePageMeta(
     'Chess Arena',
-    'Chơi cờ vua trực tuyến miễn phí với bàn cờ 2D và 3D, đấu với máy sáu cấp độ, đồng hồ thi đấu, lưu ván và học khai cuộc.',
+    'Play chess online for free on a 2D or 3D board. Challenge the computer at six levels, use tournament clocks, save your games and learn openings.',
   );
 
   return (
@@ -37,41 +37,41 @@ export default function Home() {
       <section className="home-hero">
         <div className="container home-hero-inner">
           <div className="home-hero-text">
-            <h1>Chơi cờ vua ngay trên trình duyệt</h1>
+            <h1>Play chess right in your browser</h1>
             <p>
-              Bàn cờ 2D và 3D, đấu với máy sáu cấp độ hoặc cùng bạn bè trên một máy. Có đồng hồ, lưu ván và kho kiến thức để
-              học luật, khai cuộc và giải bài tập.
+              2D and 3D boards, six computer levels, or a game with a friend on one device. Clocks, saved games and a
+              library of rules, openings and puzzles to help you improve.
             </p>
             <div className="home-cta">
               {authed ? (
                 <Link to="/play" className="site-btn primary large">
-                  Vào chơi
+                  Play now
                 </Link>
               ) : (
                 <>
                   <Link to="/register" className="site-btn primary large">
-                    Chơi ngay, miễn phí
+                    Play for free
                   </Link>
                   <Link to="/login" className="site-btn outline large">
-                    Tôi đã có tài khoản
+                    I already have an account
                   </Link>
                 </>
               )}
             </div>
-            <p className="home-note">Không cần cài đặt. Chạy trên máy tính, máy tính bảng và điện thoại.</p>
+            <p className="home-note">Nothing to install. Works on desktop, tablet and phone.</p>
           </div>
           <div className="home-hero-board">
             <StaticBoard
               fen="r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4"
               highlights={['f1', 'c4', 'f8', 'c5']}
-              label="Thế cờ Khai cuộc Ý sau bốn nước"
+              label="Italian Game position after four moves"
             />
           </div>
         </div>
       </section>
 
       <section className="container">
-        <h2 className="home-h2">Mọi thứ bạn cần để chơi cờ</h2>
+        <h2 className="home-h2">Everything you need to play chess</h2>
         <div className="home-grid">
           {FEATURES.map((f) => (
             <article key={f.title} className="card home-feature">
@@ -87,7 +87,7 @@ export default function Home() {
 
       <section className="home-band">
         <div className="container">
-          <h2 className="home-h2">Bắt đầu trong ba bước</h2>
+          <h2 className="home-h2">Get started in three steps</h2>
           <ol className="home-steps">
             {STEPS.map((s) => (
               <li key={s.n} className="card">
@@ -101,13 +101,13 @@ export default function Home() {
       </section>
 
       <section className="container">
-        <h2 className="home-h2">Học và luyện tập</h2>
+        <h2 className="home-h2">Learn and practise</h2>
         <div className="home-grid three">
           {LEARN.map((l) => (
             <Link key={l.to} to={l.to} className="card home-learn">
               <h3>{l.title}</h3>
               <p>{l.text}</p>
-              <span className="home-more">Xem thêm →</span>
+              <span className="home-more">Read more →</span>
             </Link>
           ))}
         </div>
@@ -116,10 +116,10 @@ export default function Home() {
       {!authed && (
         <section className="home-final">
           <div className="container narrow">
-            <h2>Sẵn sàng cho ván đầu tiên?</h2>
-            <p>Tạo tài khoản trong chưa đầy một phút và vào bàn cờ ngay.</p>
+            <h2>Ready for your first game?</h2>
+            <p>Create an account in under a minute and start playing.</p>
             <Link to="/register" className="site-btn primary large">
-              Tạo tài khoản
+              Create account
             </Link>
           </div>
         </section>

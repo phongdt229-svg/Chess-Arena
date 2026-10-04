@@ -25,7 +25,7 @@ export default function StaticBoard({ fen, orientation = 'w', dots = [], highlig
   const ranks = orientation === 'w' ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
 
   return (
-    <div className={`static-board ${className}`} role="img" aria-label={label ?? 'Bàn cờ minh hoạ'}>
+    <div className={`static-board ${className}`} role="img" aria-label={label ?? 'Chess board illustration'}>
       {ranks.map((r) =>
         files.map((f) => {
           const name = `${String.fromCharCode(97 + f)}${8 - r}`;

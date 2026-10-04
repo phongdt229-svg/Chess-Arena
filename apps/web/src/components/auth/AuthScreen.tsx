@@ -7,29 +7,29 @@ import './AuthScreen.css';
 type Tab = 'login' | 'register';
 
 const ERROR_TEXT: Record<string, string> = {
-  INVALID_CREDENTIALS: 'Sai tên đăng nhập hoặc mật khẩu.',
-  USERNAME_TAKEN: 'Tên đăng nhập đã được sử dụng.',
-  VALIDATION: 'Thông tin không hợp lệ.',
-  NETWORK: 'Không kết nối được máy chủ. Thử lại sau.',
-  SERVER_ERROR: 'Lỗi máy chủ. Thử lại sau.',
+  INVALID_CREDENTIALS: 'Wrong username or password.',
+  USERNAME_TAKEN: 'That username is already taken.',
+  VALIDATION: 'Invalid details.',
+  NETWORK: 'Could not reach the server. Please try again later.',
+  SERVER_ERROR: 'Server error. Please try again later.',
 };
 
 function validate(tab: Tab, username: string, password: string, confirm: string): string | null {
   if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
-    return 'Tên đăng nhập 3–20 ký tự: chữ, số hoặc dấu gạch dưới.';
+    return 'Username must be 3–20 characters: letters, digits or underscores.';
   }
   if (password.length < 8 || password.length > 72) {
-    return 'Mật khẩu phải từ 8 đến 72 ký tự.';
+    return 'Password must be 8 to 72 characters.';
   }
   if (tab === 'register' && password !== confirm) {
-    return 'Mật khẩu nhập lại không khớp.';
+    return 'Passwords do not match.';
   }
   return null;
 }
 
 export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab }) {
   const { search } = useLocation();
-  usePageMeta(initialTab === 'register' ? 'Đăng ký' : 'Đăng nhập');
+  usePageMeta(initialTab === 'register' ? 'Sign up' : 'Log in');
   const { login, register, busy, error, clearError } = useAuthStore();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [username, setUsername] = useState('');
@@ -64,19 +64,19 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
             ♟ Chess Arena
           </Link>
         </h1>
-        <p className="auth-subtitle">Đăng nhập để bắt đầu chơi</p>
+        <p className="auth-subtitle">Log in to start playing</p>
 
         <div className="auth-tabs" role="tablist">
           <button type="button" role="tab" aria-selected={tab === 'login'} className={tab === 'login' ? 'active' : ''} onClick={() => switchTab('login')}>
-            Đăng nhập
+            Log in
           </button>
           <button type="button" role="tab" aria-selected={tab === 'register'} className={tab === 'register' ? 'active' : ''} onClick={() => switchTab('register')}>
-            Đăng ký
+            Sign up
           </button>
         </div>
 
         <label className="auth-field">
-          Tên đăng nhập
+          Username
           <input
             type="text"
             value={username}
@@ -89,7 +89,7 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
         </label>
 
         <label className="auth-field">
-          Mật khẩu
+          Password
           <input
             type="password"
             value={password}
@@ -101,7 +101,7 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
 
         {tab === 'register' && (
           <label className="auth-field">
-            Nhập lại mật khẩu
+            Confirm password
             <input
               type="password"
               value={confirm}
@@ -119,10 +119,10 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
         )}
 
         <button type="submit" className="auth-submit" disabled={busy}>
-          {busy ? 'Đang xử lý…' : tab === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
+          {busy ? 'Please wait…' : tab === 'login' ? 'Log in' : 'Create account'}
         </button>
         <p className="auth-back">
-          <Link to="/">← Về trang chủ</Link>
+          <Link to="/">← Back to home</Link>
         </p>
       </form>
     </div>

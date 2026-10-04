@@ -9,7 +9,7 @@ import { usePageMeta } from '../usePageMeta';
 import './Profile.css';
 
 export default function Profile() {
-  usePageMeta('Hồ sơ của tôi');
+  usePageMeta('My profile');
   const { user, logout } = useAuthStore();
   const [version, setVersion] = useState(0);
   const refresh = () => setVersion((v) => v + 1);
@@ -24,7 +24,7 @@ export default function Profile() {
 
   return (
     <div className="container narrow">
-      <h1 className="page-title">Hồ sơ của tôi</h1>
+      <h1 className="page-title">My profile</h1>
 
       <section className="card profile-head">
         <div className="profile-avatar" aria-hidden="true">
@@ -37,15 +37,15 @@ export default function Profile() {
       </section>
 
       <section className="card profile-block">
-        <h2>Thống kê đấu với máy</h2>
+        <h2>Results against the computer</h2>
         <div className="profile-stats">
-          <div><strong>{aiGames}</strong><span>Ván đã chơi</span></div>
-          <div><strong>{stats.ai.wins}</strong><span>Thắng</span></div>
-          <div><strong>{stats.ai.draws}</strong><span>Hòa</span></div>
-          <div><strong>{stats.ai.losses}</strong><span>Thua</span></div>
-          <div><strong>{winRate === null ? '—' : `${winRate}%`}</strong><span>Tỷ lệ thắng</span></div>
+          <div><strong>{aiGames}</strong><span>Games played</span></div>
+          <div><strong>{stats.ai.wins}</strong><span>Wins</span></div>
+          <div><strong>{stats.ai.draws}</strong><span>Draws</span></div>
+          <div><strong>{stats.ai.losses}</strong><span>Losses</span></div>
+          <div><strong>{winRate === null ? '—' : `${winRate}%`}</strong><span>Win rate</span></div>
         </div>
-        <p className="profile-muted">Đã chơi {stats.local.played} ván hai người trên một máy. Thống kê chỉ lưu trên trình duyệt này.</p>
+        <p className="profile-muted">You have played {stats.local.played} two-player {stats.local.played === 1 ? 'game' : 'games'} on one device. Statistics are stored in this browser only.</p>
         <button
           className="site-btn outline"
           disabled={aiGames + stats.local.played === 0}
@@ -54,18 +54,18 @@ export default function Profile() {
             refresh();
           }}
         >
-          Xoá thống kê
+          Clear statistics
         </button>
       </section>
 
       <section className="card profile-block">
-        <h2>Bài tập</h2>
+        <h2>Puzzles</h2>
         <p>
-          Đã giải <strong>{solved}</strong>/{PUZZLES.length} bài.
+          Solved <strong>{solved}</strong> of {PUZZLES.length}.
         </p>
         <div className="profile-actions">
           <Link to="/puzzles" className="site-btn outline">
-            Luyện tập
+            Practise
           </Link>
           <button
             className="site-btn outline"
@@ -75,21 +75,21 @@ export default function Profile() {
               refresh();
             }}
           >
-            Làm lại từ đầu
+            Start over
           </button>
         </div>
       </section>
 
       <section className="card profile-block">
-        <h2>Ván đang dở</h2>
+        <h2>Unfinished game</h2>
         {save ? (
           <>
             <p>
-              Bạn có một ván {save.mode === 'ai' ? `đấu với máy (cấp ${save.aiLevel})` : 'hai người'}, lưu lúc {new Date(save.savedAt).toLocaleString()}.
+              You have a {save.mode === 'ai' ? `game against the computer (level ${save.aiLevel})` : 'two-player game'} saved on {new Date(save.savedAt).toLocaleString()}.
             </p>
             <div className="profile-actions">
               <Link to="/play" className="site-btn primary">
-                Tiếp tục chơi
+                Resume game
               </Link>
               <button
                 className="site-btn outline"
@@ -98,18 +98,18 @@ export default function Profile() {
                   refresh();
                 }}
               >
-                Xoá ván đã lưu
+                Delete saved game
               </button>
             </div>
           </>
         ) : (
-          <p className="profile-muted">Chưa có ván nào được lưu.</p>
+          <p className="profile-muted">No game is saved.</p>
         )}
       </section>
 
       <section className="profile-footer">
         <Link to="/settings" className="site-btn outline">
-          Cài đặt
+          Settings
         </Link>
         <button
           className="site-btn outline danger"
@@ -118,7 +118,7 @@ export default function Profile() {
             void logout();
           }}
         >
-          Đăng xuất
+          Log out
         </button>
       </section>
     </div>

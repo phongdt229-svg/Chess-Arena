@@ -4,13 +4,13 @@ import { PIECE_DIAGRAMS, SPECIAL } from '../pages/Rules';
 import { moveTargets } from '../chessHelpers';
 
 const EXPECTED_TARGETS: Record<string, number> = {
-  Vua: 8,
-  Hậu: 27,
-  Xe: 14,
-  Tượng: 13,
-  Mã: 8,
-  'Tốt (đi và ăn)': 3,
-  'Tốt (nước đầu)': 2,
+  King: 8,
+  Queen: 27,
+  Rook: 14,
+  Bishop: 13,
+  Knight: 8,
+  'Pawn (moving and capturing)': 3,
+  'Pawn (first move)': 2,
 };
 
 describe('rule diagrams show correct moves', () => {
@@ -23,7 +23,7 @@ describe('rule diagrams show correct moves', () => {
   });
 
   it('castling dots are real castling moves', () => {
-    const castle = SPECIAL.find((d) => d.name === 'Nhập thành')!;
+    const castle = SPECIAL.find((d) => d.name === 'Castling')!;
     const targets = moveTargets(castle.fen, castle.square);
     for (const sq of castle.dots!) expect(targets).toContain(sq);
     const moves = new Chess(castle.fen).moves({ square: 'e1' as any });
@@ -31,9 +31,9 @@ describe('rule diagrams show correct moves', () => {
   });
 
   it('en passant and promotion diagrams offer the special move', () => {
-    const ep = SPECIAL.find((d) => d.name.startsWith('Bắt Tốt'))!;
+    const ep = SPECIAL.find((d) => d.name === 'En passant')!;
     expect(moveTargets(ep.fen, ep.square)).toContain('d6');
-    const promo = SPECIAL.find((d) => d.name === 'Phong cấp')!;
+    const promo = SPECIAL.find((d) => d.name === 'Promotion')!;
     expect(moveTargets(promo.fen, promo.square)).toContain('e8');
   });
 

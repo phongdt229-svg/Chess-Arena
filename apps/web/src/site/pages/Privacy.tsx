@@ -2,38 +2,38 @@ import { Link } from '../../router/router';
 import { usePageMeta } from '../usePageMeta';
 
 export default function Privacy() {
-  usePageMeta('Chính sách bảo mật', 'Chess Arena lưu những dữ liệu nào và dùng chúng ra sao.');
+  usePageMeta('Privacy policy', 'What data Chess Arena stores and how it is used.');
   return (
     <div className="container narrow prose">
-      <h1 className="page-title">Chính sách bảo mật</h1>
-      <p className="page-lead">Cập nhật lần cuối: 04/10/2026</p>
-      <p>Chúng tôi chỉ lưu những dữ liệu cần thiết để bạn đăng nhập và chơi. Dưới đây là toàn bộ dữ liệu mà Chess Arena lưu.</p>
+      <h1 className="page-title">Privacy policy</h1>
+      <p className="page-lead">Last updated: 4 October 2026</p>
+      <p>We only keep the data needed to let you log in and play. This is everything Chess Arena stores.</p>
 
-      <h2>Dữ liệu lưu trên máy chủ</h2>
+      <h2>Data stored on our server</h2>
       <ul>
-        <li><strong>Tên đăng nhập</strong> bạn chọn, điểm Elo mặc định và thời điểm tạo tài khoản.</li>
-        <li><strong>Mật khẩu dưới dạng băm một chiều</strong> (password hash). Chúng tôi không lưu mật khẩu gốc và không thể xem lại nó.</li>
-        <li><strong>Mã phiên đăng nhập</strong>, lưu dưới dạng băm, hết hạn sau 30 ngày. Mã bị xoá khi bạn đăng xuất.</li>
+        <li>The <strong>username</strong> you choose, a default Elo rating and the date the account was created.</li>
+        <li>Your <strong>password as a one-way hash</strong>. We do not store the original password and cannot read it.</li>
+        <li><strong>Login session tokens</strong>, stored only as hashes and expiring after 30 days. A token is deleted when you log out.</li>
       </ul>
-      <p>Chúng tôi không yêu cầu email, số điện thoại hay thông tin cá nhân nào khác.</p>
+      <p>We do not ask for an email address, phone number or any other personal information.</p>
 
-      <h2>Dữ liệu lưu trong trình duyệt của bạn</h2>
+      <h2>Data stored in your browser</h2>
       <ul>
-        <li>Mã phiên đăng nhập để bạn không phải đăng nhập lại.</li>
-        <li>Ván cờ dang dở, thống kê, tiến độ bài tập và các tuỳ chọn (âm thanh, chế độ hiển thị, cài đặt mặc định).</li>
+        <li>Your login session token, so you do not have to log in again.</li>
+        <li>Unfinished games, statistics, puzzle progress and your preferences (sound, display mode, default settings).</li>
       </ul>
-      <p>Những dữ liệu này nằm hoàn toàn trên thiết bị của bạn (localStorage) và không được gửi lên máy chủ. Bạn có thể xoá chúng bất cứ lúc nào bằng cách xoá dữ liệu trang web trong trình duyệt.</p>
+      <p>This data lives entirely on your device (localStorage) and is not sent to the server. You can remove it at any time by clearing the site data in your browser.</p>
 
-      <h2>Cookie, theo dõi và bên thứ ba</h2>
-      <p>Chess Arena không dùng cookie theo dõi, không có công cụ phân tích hay quảng cáo, và không chia sẻ dữ liệu của bạn với bên thứ ba.</p>
+      <h2>Cookies, tracking and third parties</h2>
+      <p>Chess Arena does not use tracking cookies, analytics or advertising, and does not share your data with third parties.</p>
 
-      <h2>Bảo mật</h2>
-      <p>Mật khẩu được băm bằng thuật toán chuẩn của PHP, mã phiên chỉ lưu dạng băm, và mọi truy vấn cơ sở dữ liệu dùng câu lệnh tham số hoá. Không hệ thống nào an toàn tuyệt đối, vì vậy hãy dùng mật khẩu riêng, đủ dài cho Chess Arena.</p>
+      <h2>Security</h2>
+      <p>Passwords are hashed with PHP&apos;s standard algorithm, session tokens are stored only as hashes, and all database queries use prepared statements. No system is perfectly secure, so please use a long password that you do not use anywhere else.</p>
 
-      <h2>Quyền của bạn</h2>
-      <p>Bạn có thể đăng xuất để xoá mã phiên khỏi thiết bị. Việc xoá hẳn tài khoản trên máy chủ hiện chưa có trong giao diện; hãy liên hệ đơn vị vận hành trang web để được hỗ trợ. Xem thêm <Link to="/terms">Điều khoản sử dụng</Link>.</p>
+      <h2>Your rights</h2>
+      <p>You can log out to remove the session token from your device. Deleting your account from the server is not available in the interface yet; please contact the site operator for help. See also the <Link to="/terms">Terms of use</Link>.</p>
 
-      <p className="legal-note">Bản chính sách này mô tả đúng hành vi hiện tại của ứng dụng. Đơn vị vận hành cần bổ sung thông tin liên hệ và rà soát pháp lý trước khi công khai.</p>
+      <p className="legal-note">This policy describes what the application currently does. The site operator should add contact details and review it legally before publishing the site.</p>
     </div>
   );
 }

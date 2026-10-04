@@ -7,7 +7,7 @@ import { usePageMeta } from '../usePageMeta';
 import './Openings.css';
 
 export default function Openings() {
-  usePageMeta('Khai cuộc cờ vua', 'Mười khai cuộc cờ vua phổ biến: xem từng nước đi, ý tưởng cho Trắng và Đen, và thử ngay trên bàn cờ.');
+  usePageMeta('Chess openings', 'Ten popular chess openings: step through the moves, learn the ideas for White and Black and try them on the board.');
   const [openingId, setOpeningId] = useState(OPENINGS[0].id);
   const opening = OPENINGS.find((o) => o.id === openingId)!;
   const [step, setStep] = useState(opening.moves.length);
@@ -43,11 +43,11 @@ export default function Openings() {
 
   return (
     <div className="container">
-      <h1 className="page-title">Khai cuộc cờ vua</h1>
-      <p className="page-lead">Những nước đầu tiên quyết định hướng đi của cả ván. Chọn một khai cuộc, duyệt từng nước và thử trên bàn cờ.</p>
+      <h1 className="page-title">Chess openings</h1>
+      <p className="page-lead">The first moves shape the whole game. Pick an opening, step through its moves and try it on the board.</p>
 
       <div className="openings-layout">
-        <nav className="openings-list" aria-label="Danh sách khai cuộc">
+        <nav className="openings-list" aria-label="List of openings">
           {OPENINGS.map((o) => (
             <button key={o.id} className={`openings-item ${o.id === openingId ? 'active' : ''}`} onClick={() => select(o.id)} aria-pressed={o.id === openingId}>
               <span className="openings-name">{o.name}</span>
@@ -58,15 +58,15 @@ export default function Openings() {
 
         <section className="openings-detail card" aria-live="polite">
           <div className="openings-board">
-            <StaticBoard fen={view.fen} highlights={view.highlights} label={`${opening.name} sau ${step} nước`} />
+            <StaticBoard fen={view.fen} highlights={view.highlights} label={`${opening.name} after ${step} moves`} />
             <div className="openings-controls">
-              <button onClick={() => setStep(0)} disabled={step === 0} aria-label="Về thế ban đầu">⏮</button>
-              <button onClick={() => setStep(step - 1)} disabled={step === 0} aria-label="Nước trước">◀</button>
+              <button onClick={() => setStep(0)} disabled={step === 0} aria-label="Back to the start">⏮</button>
+              <button onClick={() => setStep(step - 1)} disabled={step === 0} aria-label="Previous move">◀</button>
               <span>
                 {step}/{max}
               </span>
-              <button onClick={() => setStep(step + 1)} disabled={step === max} aria-label="Nước sau">▶</button>
-              <button onClick={() => setStep(max)} disabled={step === max} aria-label="Đến nước cuối">⏭</button>
+              <button onClick={() => setStep(step + 1)} disabled={step === max} aria-label="Next move">▶</button>
+              <button onClick={() => setStep(max)} disabled={step === max} aria-label="Jump to the last move">⏭</button>
             </div>
           </div>
 
@@ -76,7 +76,7 @@ export default function Openings() {
               <span>ECO {opening.eco}</span>
               <span>{opening.style}</span>
             </p>
-            <ol className="openings-moves" aria-label="Các nước đi">
+            <ol className="openings-moves" aria-label="Moves">
               {opening.moves.map((san, i) => (
                 <li key={i} className={i + 1 === step ? 'current' : ''}>
                   <button onClick={() => setStep(i + 1)}>
@@ -88,13 +88,13 @@ export default function Openings() {
             </ol>
             <p>{opening.summary}</p>
             <dl>
-              <dt>Ý tưởng của Trắng</dt>
+              <dt>White&apos;s ideas</dt>
               <dd>{opening.white}</dd>
-              <dt>Ý tưởng của Đen</dt>
+              <dt>Black&apos;s ideas</dt>
               <dd>{opening.black}</dd>
             </dl>
             <button className="site-btn primary" onClick={tryIt}>
-              Thử thế này trên bàn cờ
+              Try this on the board
             </button>
           </div>
         </section>

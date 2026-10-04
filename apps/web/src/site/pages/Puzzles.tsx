@@ -21,7 +21,7 @@ function PuzzleBoard({ puzzle, onSolved, onNext }: { puzzle: Puzzle; onSolved: (
   const [answer, setAnswer] = useState<string | null>(null);
   const state = useRef({ remaining: puzzle.mateIn, good: new Set<string>(), busy: false, scripted: false });
   const timers = useRef<number[]>([]);
-  const turn = puzzle.fen.split(' ')[1] === 'b' ? 'Đen' : 'Trắng';
+  const turn = puzzle.fen.split(' ')[1] === 'b' ? 'Black' : 'White';
 
   useEffect(() => {
     const store = useGameStore;
@@ -131,34 +131,34 @@ function PuzzleBoard({ puzzle, onSolved, onNext }: { puzzle: Puzzle; onSolved: (
       <div className="puzzle-panel card">
         <h2>{puzzle.title}</h2>
         <p className="puzzle-goal">
-          {turn} đi trước và chiếu hết trong <strong>{puzzle.mateIn} nước</strong>.
+          {turn} to move and checkmate in <strong>{puzzle.mateIn} {puzzle.mateIn === 1 ? 'move' : 'moves'}</strong>.
         </p>
         <p className="puzzle-theme">{puzzle.theme}</p>
 
         <div className={`puzzle-status ${status}`} role="status">
-          {status === 'solving' && 'Tìm nước đi của bạn.'}
-          {status === 'wrong' && 'Chưa đúng, thử nước khác nhé.'}
-          {status === 'solved' && 'Chính xác, chiếu hết!'}
+          {status === 'solving' && 'Find your move.'}
+          {status === 'wrong' && 'Not quite, try another move.'}
+          {status === 'solved' && 'Correct, checkmate!'}
         </div>
         {answer && status !== 'solved' && (
           <p className="puzzle-answer">
-            Nước đầu tiên: <strong>{answer}</strong>
+            First move: <strong>{answer}</strong>
           </p>
         )}
 
         <div className="puzzle-actions">
           <button className="site-btn outline" onClick={showHint} disabled={status === 'solved'}>
-            {hintShown ? 'Gợi ý lại' : 'Gợi ý'}
+            {hintShown ? 'Show hint again' : 'Hint'}
           </button>
           <button className="site-btn outline" onClick={showAnswer} disabled={status === 'solved'}>
-            Xem đáp án
+            Show answer
           </button>
           <button className="site-btn outline" onClick={reset}>
-            Làm lại
+            Reset
           </button>
           {status === 'solved' && onNext && (
             <button className="site-btn primary" onClick={onNext}>
-              Bài tiếp theo
+              Next puzzle
             </button>
           )}
         </div>
@@ -168,7 +168,7 @@ function PuzzleBoard({ puzzle, onSolved, onNext }: { puzzle: Puzzle; onSolved: (
 }
 
 export default function Puzzles() {
-  usePageMeta('Bài tập cờ thế', 'Luyện tìm nước chiếu hết trong một hoặc hai nước trên bàn cờ tương tác, theo dõi số bài đã giải.');
+  usePageMeta('Chess puzzles', 'Practise finding checkmate in one or two moves on an interactive board and track the puzzles you have solved.');
   const userId = useAuthStore((s) => s.user?.id);
   const [solved, setSolved] = useState<string[]>(() => (userId !== undefined ? readSolved(userId) : []));
   const [index, setIndex] = useState(() => {
@@ -188,20 +188,20 @@ export default function Puzzles() {
 
   return (
     <div className="container">
-      <h1 className="page-title">Bài tập cờ thế</h1>
+      <h1 className="page-title">Chess puzzles</h1>
       <p className="page-lead">
-        Đã giải {solved.length}/{PUZZLES.length} bài. Bấm vào quân rồi bấm ô đích như khi chơi bình thường.
+        Solved {solved.length} of {PUZZLES.length}. Click a piece, then click its destination, just like a normal game.
       </p>
 
       <div className="puzzles-layout">
-        <nav className="puzzles-list" aria-label="Danh sách bài tập">
+        <nav className="puzzles-list" aria-label="List of puzzles">
           {PUZZLES.map((p, i) => (
             <button key={p.id} className={`puzzles-item ${i === index ? 'active' : ''} ${solved.includes(p.id) ? 'done' : ''}`} onClick={() => setIndex(i)} aria-current={i === index ? 'true' : undefined}>
-              <span className="puzzles-check" aria-label={solved.includes(p.id) ? 'Đã giải' : 'Chưa giải'}>
+              <span className="puzzles-check" aria-label={solved.includes(p.id) ? 'Solved' : 'Not solved'}>
                 {solved.includes(p.id) ? '✓' : i + 1}
               </span>
               <span className="puzzles-title">{p.title}</span>
-              <span className="puzzles-mate">Chiếu hết {p.mateIn}</span>
+              <span className="puzzles-mate">Mate in {p.mateIn}</span>
             </button>
           ))}
         </nav>

@@ -24,7 +24,7 @@ export default function GameApp() {
   const { user, logout } = useAuthStore();
   const { search } = useLocation();
   const importedPgn = useRef(search.get('pgn')).current;
-  usePageMeta('Chơi cờ');
+  usePageMeta('Play');
   useGameSounds();
   useRecordStats(user?.id);
 
@@ -60,7 +60,7 @@ export default function GameApp() {
     <div className="app">
       <header className="app-header">
         <h1>
-          <Link to="/" className="header-home" title="Về trang chủ">
+          <Link to="/" className="header-home" title="Back to home">
             ♟ Chess Arena
           </Link>
         </h1>
@@ -90,9 +90,9 @@ export default function GameApp() {
               void logout();
             }}
             className="btn-secondary btn-logout"
-            title="Đăng xuất"
+            title="Log out"
           >
-            Đăng xuất
+            Log out
           </button>
         </div>
       </header>

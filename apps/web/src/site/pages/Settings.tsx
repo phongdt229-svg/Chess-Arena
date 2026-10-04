@@ -6,27 +6,27 @@ import './Settings.css';
 const LEVELS = ['Beginner', 'Easy', 'Medium', 'Hard', 'Very Hard', 'Expert'];
 
 export default function Settings() {
-  usePageMeta('Cài đặt', 'Tuỳ chỉnh âm thanh, chế độ hiển thị và các lựa chọn mặc định khi bắt đầu ván mới.');
+  usePageMeta('Settings', 'Adjust sound, display mode and the defaults used when you start a new game.');
   const s = useSettingsStore();
 
   return (
     <div className="container narrow">
-      <h1 className="page-title">Cài đặt</h1>
-      <p className="page-lead">Các lựa chọn được lưu trên trình duyệt này và áp dụng cho cả khi bạn đổi tài khoản.</p>
+      <h1 className="page-title">Settings</h1>
+      <p className="page-lead">Your choices are saved in this browser and apply to every account you use on it.</p>
 
       <section className="card settings-card">
         <h2>Chung</h2>
         <label className="settings-row">
           <span>
             <strong>Âm thanh</strong>
-            <small>Tiếng đi quân, ăn quân, chiếu và kết thúc ván.</small>
+            <small>Sounds for moves, captures, check and the end of a game.</small>
           </span>
-          <input type="checkbox" checked={s.soundEnabled} onChange={() => s.toggleSound()} aria-label="Bật âm thanh" />
+          <input type="checkbox" checked={s.soundEnabled} onChange={() => s.toggleSound()} aria-label="Enable sound" />
         </label>
         <label className="settings-row">
           <span>
-            <strong>Bàn cờ khi vào chơi</strong>
-            <small>Bàn 3D cần máy mạnh hơn bàn 2D.</small>
+            <strong>Board when you start playing</strong>
+            <small>The 3D board needs a more powerful device than the 2D board.</small>
           </span>
           <select value={s.defaultView} onChange={(e) => s.update({ defaultView: e.target.value as '2d' | '3d' })}>
             <option value="2d">2D</option>
@@ -36,10 +36,10 @@ export default function Settings() {
       </section>
 
       <section className="card settings-card">
-        <h2>Ván mới (mặc định)</h2>
+        <h2>New game defaults</h2>
         <label className="settings-row">
           <span>
-            <strong>Chế độ</strong>
+            <strong>Mode</strong>
           </span>
           <select value={s.defaultMode} onChange={(e) => s.update({ defaultMode: e.target.value as 'local' | 'ai' })}>
             <option value="local">Local (2 Players)</option>
@@ -48,17 +48,17 @@ export default function Settings() {
         </label>
         <label className="settings-row">
           <span>
-            <strong>Màu quân khi đấu với máy</strong>
+            <strong>Your colour against the computer</strong>
           </span>
           <select value={s.defaultColor} onChange={(e) => s.update({ defaultColor: e.target.value as 'w' | 'b' | 'random' })}>
-            <option value="random">Ngẫu nhiên</option>
-            <option value="w">Trắng</option>
-            <option value="b">Đen</option>
+            <option value="random">Random</option>
+            <option value="w">White</option>
+            <option value="b">Black</option>
           </select>
         </label>
         <label className="settings-row">
           <span>
-            <strong>Cấp độ máy</strong>
+            <strong>Computer level</strong>
           </span>
           <select value={s.defaultLevel} onChange={(e) => s.update({ defaultLevel: Number(e.target.value) })}>
             {LEVELS.map((name, i) => (
@@ -70,7 +70,7 @@ export default function Settings() {
         </label>
         <label className="settings-row">
           <span>
-            <strong>Đồng hồ</strong>
+            <strong>Clock</strong>
           </span>
           <select value={s.defaultTime} onChange={(e) => s.update({ defaultTime: e.target.value })}>
             {TIME_CONTROLS.map((t) => (
@@ -83,7 +83,7 @@ export default function Settings() {
       </section>
 
       <button className="site-btn outline" onClick={s.reset}>
-        Khôi phục mặc định
+        Restore defaults
       </button>
     </div>
   );

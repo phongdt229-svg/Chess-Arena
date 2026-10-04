@@ -4,10 +4,10 @@ import { useAuthStore } from '../store/authStore';
 import './site.css';
 
 const NAV = [
-  { to: '/rules', label: 'Luật cờ' },
-  { to: '/guide', label: 'Hướng dẫn' },
-  { to: '/openings', label: 'Khai cuộc' },
-  { to: '/puzzles', label: 'Bài tập' },
+  { to: '/rules', label: 'Rules' },
+  { to: '/guide', label: 'Guide' },
+  { to: '/openings', label: 'Openings' },
+  { to: '/puzzles', label: 'Puzzles' },
 ];
 
 export default function SiteLayout({ children }: { children: ReactNode }) {
@@ -27,7 +27,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
 
           <button
             className="site-menu-btn"
-            aria-label="Mở menu"
+            aria-label="Open menu"
             aria-expanded={open}
             aria-controls="site-nav"
             onClick={() => setOpen((v) => !v)}
@@ -35,7 +35,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             {open ? '✕' : '☰'}
           </button>
 
-          <nav id="site-nav" className={`site-nav ${open ? 'open' : ''}`} aria-label="Điều hướng chính">
+          <nav id="site-nav" className={`site-nav ${open ? 'open' : ''}`} aria-label="Main navigation">
             {NAV.map((item) => (
               <Link key={item.to} to={item.to} onClick={close} aria-current={pathname === item.to ? 'page' : undefined}>
                 {item.label}
@@ -48,10 +48,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                   {user?.username}
                 </Link>
                 <Link to="/settings" onClick={close}>
-                  Cài đặt
+                  Settings
                 </Link>
                 <Link to="/play" className="site-btn primary" onClick={close}>
-                  Vào chơi
+                  Play
                 </Link>
                 <button
                   className="site-btn ghost"
@@ -60,17 +60,17 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                     void logout();
                   }}
                 >
-                  Đăng xuất
+                  Log out
                 </button>
               </>
             ) : (
               status !== 'loading' && (
                 <>
                   <Link to="/login" onClick={close}>
-                    Đăng nhập
+                    Log in
                   </Link>
                   <Link to="/register" className="site-btn primary" onClick={close}>
-                    Đăng ký
+                    Sign up
                   </Link>
                 </>
               )
@@ -84,11 +84,11 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       <footer className="site-footer">
         <div className="site-footer-inner">
           <span>© {new Date().getFullYear()} Chess Arena</span>
-          <nav aria-label="Liên kết chân trang">
-            <Link to="/rules">Luật cờ</Link>
-            <Link to="/guide">Hướng dẫn</Link>
-            <Link to="/terms">Điều khoản</Link>
-            <Link to="/privacy">Bảo mật</Link>
+          <nav aria-label="Footer links">
+            <Link to="/rules">Rules</Link>
+            <Link to="/guide">Guide</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/privacy">Privacy</Link>
           </nav>
         </div>
       </footer>

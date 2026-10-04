@@ -4,93 +4,93 @@ import './Guide.css';
 
 const FAQ: { q: string; a: React.ReactNode }[] = [
   {
-    q: 'Chess Arena có mất phí không?',
-    a: 'Không. Trang web không có tính năng thu phí hay quảng cáo.',
+    q: 'Does Chess Arena cost anything?',
+    a: 'No. The site has no payments and no ads.',
   },
   {
-    q: 'Máy chơi mạnh cỡ nào?',
-    a: 'Máy là engine tự viết chạy ngay trong trình duyệt, có sáu cấp. Cấp 1 và 2 đôi khi đi sai có chủ ý để người mới dễ thắng; cấp 5 và 6 tính sâu hơn và có thể nghĩ vài giây mỗi nước. Máy không mạnh bằng các engine chuyên nghiệp như Stockfish.',
+    q: 'How strong is the computer?',
+    a: 'It is a custom engine that runs inside your browser, with six levels. Levels 1 and 2 sometimes make deliberate mistakes so beginners can win; levels 5 and 6 search deeper and may think for a few seconds per move. It is not as strong as professional engines such as Stockfish.',
   },
   {
-    q: 'Có chơi online với người khác được không?',
-    a: 'Hiện chưa. Bạn có thể chơi hai người trên cùng một thiết bị hoặc đấu với máy. Chơi trực tuyến với người khác nằm trong kế hoạch phát triển.',
+    q: 'Can I play online against other people?',
+    a: 'Not yet. You can play two players on one device or play the computer. Online play against other people is planned.',
   },
   {
-    q: 'Ván cờ của tôi được lưu ở đâu?',
-    a: 'Ván dang dở được lưu trong trình duyệt của bạn, gắn với tài khoản đang đăng nhập. Dữ liệu này không đồng bộ giữa các thiết bị và sẽ mất nếu bạn xoá dữ liệu trình duyệt. Muốn giữ lâu dài, hãy tải ván về dưới dạng PGN.',
+    q: 'Where are my games saved?',
+    a: 'Unfinished games are saved in your browser, tied to the account you are logged in with. They are not synced between devices and are lost if you clear your browser data. To keep a game for good, download it as a PGN file.',
   },
   {
-    q: 'Tôi quên mật khẩu thì sao?',
-    a: 'Hiện chưa có tính năng khôi phục mật khẩu vì tài khoản không gắn với email. Hãy lưu mật khẩu cẩn thận, hoặc dùng trình quản lý mật khẩu của trình duyệt.',
+    q: 'What if I forget my password?',
+    a: 'There is no password recovery yet because accounts are not linked to an email address. Keep your password safe, or use your browser\'s password manager.',
   },
   {
-    q: 'Vì sao tôi không bấm vào được quân cờ?',
-    a: 'Khi chơi với máy, bạn chỉ đi được lúc đến lượt mình, và bị khoá trong lúc máy đang suy nghĩ. Ván đã kết thúc hoặc hết giờ cũng không đi tiếp được. Hãy bấm New Game để bắt đầu ván mới.',
+    q: 'Why can I not move my pieces?',
+    a: 'Against the computer you can only move on your own turn, and the board is locked while the computer is thinking. You also cannot move once the game has ended or time has run out. Press New Game to start again.',
   },
   {
-    q: 'Bàn 3D bị giật trên máy yếu thì làm sao?',
-    a: 'Trong chế độ 3D hãy đổi Quality sang Low để tắt bóng đổ, hoặc quay lại bàn 2D bất cứ lúc nào, ván cờ vẫn giữ nguyên.',
+    q: 'The 3D board is slow on my device. What can I do?',
+    a: 'In 3D mode set Quality to Low to turn off shadows, or switch back to the 2D board at any time. Your game stays exactly as it is.',
   },
   {
-    q: 'Ván hòa khi nào?',
+    q: 'When is a game drawn?',
     a: (
       <>
-        Hết nước đi, luật 50 nước, lặp lại thế cờ ba lần, không đủ quân để chiếu hết hoặc hai bên thỏa thuận. Xem chi tiết ở trang{' '}
-        <Link to="/rules">Luật cờ</Link>.
+        By stalemate, the fifty-move rule, threefold repetition, insufficient material or agreement. See the <Link to="/rules">Rules</Link> page
+        for details.
       </>
     ),
   },
 ];
 
 export default function Guide() {
-  usePageMeta('Hướng dẫn sử dụng', 'Hướng dẫn chơi trên Chess Arena: tạo ván mới, đi quân, bàn 3D, đồng hồ, nhập xuất PGN, lưu ván và các câu hỏi thường gặp.');
+  usePageMeta('Guide', 'A guide to playing on Chess Arena: starting a game, moving pieces, the 3D board, clocks, PGN import and export, saved games and common questions.');
 
   return (
     <div className="container narrow prose">
-      <h1 className="page-title">Hướng dẫn sử dụng</h1>
-      <p className="page-lead">Mọi thao tác trong màn hình chơi, từ ván đầu tiên đến các tính năng nâng cao.</p>
+      <h1 className="page-title">How to use Chess Arena</h1>
+      <p className="page-lead">Every control on the game screen, from your first game to the advanced features.</p>
 
-      <h2>1. Bắt đầu một ván</h2>
+      <h2>1. Start a game</h2>
       <p>
-        Sau khi <Link to="/register">đăng ký</Link> hoặc <Link to="/login">đăng nhập</Link>, bạn vào màn hình chơi. Bấm <strong>New Game</strong> để mở
-        hộp chọn:
+        After you <Link to="/register">sign up</Link> or <Link to="/login">log in</Link> you land on the game screen. Press <strong>New Game</strong> to
+        open the options:
       </p>
       <ul>
-        <li><strong>Local (2 Players):</strong> hai người luân phiên đi trên cùng một thiết bị.</li>
-        <li><strong>Play vs AI:</strong> đấu với máy. Chọn màu quân (Trắng, Đen hoặc ngẫu nhiên) và cấp độ từ 1 đến 6.</li>
-        <li><strong>Time Control:</strong> không giới hạn hoặc đồng hồ 1, 3, 5, 10, 15 phút, một số mức có cộng thêm giây mỗi nước.</li>
+        <li><strong>Local (2 Players):</strong> two people take turns on the same device.</li>
+        <li><strong>Play vs AI:</strong> play the computer. Choose your colour (White, Black or random) and a level from 1 to 6.</li>
+        <li><strong>Time Control:</strong> unlimited, or a clock of 1, 3, 5, 10 or 15 minutes. Some options add a few seconds after every move.</li>
       </ul>
 
-      <h2>2. Đi quân</h2>
+      <h2>2. Move your pieces</h2>
       <ul>
-        <li>Bấm vào quân của bạn, các ô có thể đi sẽ được tô sáng, rồi bấm ô đích. Bấm lại quân đó để bỏ chọn.</li>
-        <li>Có thể kéo thả quân sang ô đích trên bàn 2D.</li>
-        <li>Khi Tốt tới hàng cuối, một hộp hiện ra để chọn quân phong cấp.</li>
-        <li>Ô của Vua đỏ lên khi đang bị chiếu. Hai ô của nước vừa đi được tô nổi bật.</li>
+        <li>Click one of your pieces and the squares it can go to light up, then click the destination. Click the piece again to deselect it.</li>
+        <li>On the 2D board you can also drag a piece to its destination.</li>
+        <li>When a pawn reaches the last rank, a dialog asks which piece to promote to.</li>
+        <li>The king&apos;s square turns red when it is in check, and the two squares of the last move are highlighted.</li>
       </ul>
 
-      <h2>3. Bàn cờ 3D</h2>
+      <h2>3. The 3D board</h2>
       <p>
-        Bấm <strong>3D View</strong> trên thanh trên cùng. Kéo chuột (hoặc vuốt) để xoay, cuộn chuột (hoặc chụm hai ngón) để phóng to thu nhỏ, nút
-        <strong> Reset View</strong> đưa camera về góc nhìn mặc định. <strong>Quality</strong> chọn Low hay High (High có bóng đổ).
+        Press <strong>3D View</strong> in the top bar. Drag (or swipe) to rotate, scroll (or pinch) to zoom, and press <strong>Reset View</strong> to
+        return the camera to its default angle. <strong>Quality</strong> switches between Low and High (High adds shadows).
       </p>
 
-      <h2>4. Các nút điều khiển</h2>
+      <h2>4. Controls</h2>
       <ul>
-        <li><strong>Undo / Redo:</strong> đi lại nước vừa đi. Khi chơi với máy, mỗi lần lùi một cặp nước (của bạn và của máy).</li>
-        <li><strong>Flip Board:</strong> lật bàn cờ.</li>
-        <li><strong>Sound:</strong> bật tắt âm thanh đi quân, ăn quân, chiếu và kết thúc ván.</li>
-        <li><strong>Import / Export:</strong> sao chép hay tải thế cờ (FEN) và ván đấu (PGN), hoặc dán để nạp một ván có sẵn.</li>
-        <li><strong>Resign:</strong> xin thua ván hiện tại.</li>
+        <li><strong>Undo / Redo:</strong> take back or replay moves. Against the computer each press steps a pair of moves (yours and the computer&apos;s).</li>
+        <li><strong>Flip Board:</strong> turn the board around.</li>
+        <li><strong>Sound:</strong> turn move, capture, check and game-over sounds on or off.</li>
+        <li><strong>Import / Export:</strong> copy or download a position (FEN) or a game (PGN), or paste one to load it.</li>
+        <li><strong>Resign:</strong> give up the current game.</li>
       </ul>
 
-      <h2>5. Lưu và chơi tiếp</h2>
+      <h2>5. Save and resume</h2>
       <p>
-        Ván chưa kết thúc được tự lưu sau mỗi nước đi. Lần sau vào màn hình chơi, bạn được hỏi có muốn <strong>Resume</strong> ván cũ hay{' '}
-        <strong>Start fresh</strong>.
+        Games that are not finished are saved automatically after every move. Next time you open the game screen you are asked whether to{' '}
+        <strong>Resume</strong> the old game or <strong>Start fresh</strong>.
       </p>
 
-      <h2>Câu hỏi thường gặp</h2>
+      <h2>Frequently asked questions</h2>
       <div className="faq">
         {FAQ.map((item) => (
           <details key={item.q} className="faq-item">

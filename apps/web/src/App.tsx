@@ -21,7 +21,7 @@ function Gate({ access, children }: { access: Access; children: ReactElement }) 
   }, [target]);
 
   if (target) return null;
-  if (status === 'loading' && access !== 'public') return <div className="auth-loading">Đang tải…</div>;
+  if (status === 'loading' && access !== 'public') return <div className="auth-loading">Loading…</div>;
   return children;
 }
 
