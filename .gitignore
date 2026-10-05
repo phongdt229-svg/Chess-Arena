@@ -33,3 +33,7 @@ yarn-debug.log*
 
 # Dev-only mock auth database (see apps/web/vite.config.ts)
 .dev-auth.json
+
+# Hosting upload bundle (scripts/package-deploy.mjs)
+deploy
+chessapp-deploy.zip

@@ -4,3 +4,5 @@ Disallow: /play
 Disallow: /profile
 Disallow: /settings
 Disallow: /api/
+
+Sitemap: https://chessapp.online/sitemap.xml

@@ -9,7 +9,8 @@
     "test": "pnpm --recursive test",
     "lint": "pnpm --recursive lint",
     "lint:fix": "pnpm --recursive lint:fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:deploy": "node scripts/package-deploy.mjs"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",
