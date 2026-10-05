@@ -1,55 +1,64 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type MutableRefObject } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import * as THREE from 'three';
 import { useGameStore } from '../../store/gameStore';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
+import { QUALITY_PROFILES, cameraHome, defaultQuality, type Quality3D } from './quality';
 import './Board3D.css';
 
-function BoardScene({ quality, onResetCamera }: { quality: 'low' | 'high'; onResetCamera: () => void }) {
-  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation } =
-    useGameStore();
-  const { camera } = useThree();
+interface SceneProps {
+  quality: Quality3D;
+  resetRef: MutableRefObject<(() => void) | null>;
+}
+
+function BoardScene({ quality, resetRef }: SceneProps) {
+  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation } = useGameStore();
+  const { camera, invalidate } = useThree();
   const controlsRef = useRef<any>(null);
+  const profile = QUALITY_PROFILES[quality];
 
   const isLegalTarget = (sq: number) => legalMoves.some((m) => m.to === sq);
   const isLastMoveSquare = (sq: number) => lastMoveFrom === sq || lastMoveTo === sq;
 
   useEffect(() => {
-    if (camera instanceof THREE.PerspectiveCamera) {
-      const pos = orientation === 'w' ? { x: 0, y: 8, z: 10 } : { x: 0, y: 8, z: -10 };
-      camera.position.set(pos.x, pos.y, pos.z);
+    const home = () => {
+      const [x, y, z] = cameraHome(orientation);
+      camera.position.set(x, y, z);
       if (controlsRef.current) {
         controlsRef.current.target.set(0, 0, 0);
         controlsRef.current.update();
       }
-    }
-  }, [camera, orientation]);
+      invalidate();
+    };
+    home();
+    resetRef.current = home;
+    return () => {
+      resetRef.current = null;
+    };
+  }, [camera, orientation, invalidate, resetRef]);
 
   return (
     <>
-      <PerspectiveCamera position={[0, 8, 10]} fov={50} makeDefault />
+      <PerspectiveCamera position={cameraHome(orientation)} fov={50} makeDefault />
 
-      <OrbitControls
-        ref={controlsRef}
-        maxPolarAngle={Math.PI * 0.45}
-        minDistance={5}
-        maxDistance={20}
+      <OrbitControls ref={controlsRef} enableDamping={false} maxPolarAngle={Math.PI * 0.45} minDistance={5} maxDistance={20} />
+
+      <ambientLight intensity={profile.extraLights ? 0.5 : quality === 'medium' ? 0.6 : 0.8} />
+      <directionalLight
+        position={profile.shadows ? [8, 12, 6] : [5, 8, 5]}
+        intensity={profile.shadows ? 1.0 : 0.6}
+        castShadow={profile.shadows}
+        shadow-mapSize={[profile.shadowMapSize, profile.shadowMapSize]}
+        shadow-camera-left={-12}
+        shadow-camera-right={12}
+        shadow-camera-top={12}
+        shadow-camera-bottom={-12}
       />
-
-      {quality === 'high' && (
+      {profile.extraLights && (
         <>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[8, 12, 6]} intensity={1.0} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={12} shadow-camera-bottom={-12} />
           <directionalLight position={[-5, 8, -8]} intensity={0.3} />
           <pointLight position={[0, 6, 0]} intensity={0.2} />
-        </>
-      )}
-      {quality === 'low' && (
-        <>
-          <ambientLight intensity={0.8} />
-          <directionalLight position={[5, 8, 5]} intensity={0.6} />
         </>
       )}
 
@@ -67,42 +76,35 @@ function BoardScene({ quality, onResetCamera }: { quality: 'low' | 'high'; onRes
       ))}
 
       {/* Pieces */}
-      {board.map((piece, sq) =>
-        piece ? <Piece3D key={`piece-${sq}`} square={sq} piece={piece} /> : null
-      )}
+      {board.map((piece, sq) => (piece ? <Piece3D key={`piece-${sq}`} square={sq} piece={piece} /> : null))}
     </>
   );
 }
 
 export default function Board3D() {
-  const [quality, setQuality] = useState<'low' | 'high'>('high');
-  const canvasRef = useRef<any>(null);
-
-  const handleResetCamera = () => {
-    if (canvasRef.current) {
-      // Camera reset is handled inside BoardScene via useThree
-      // This is just a placeholder - the reset logic is in BoardScene
-    }
-  };
+  const [quality, setQuality] = useState<Quality3D>(defaultQuality);
+  const resetRef = useRef<(() => void) | null>(null);
+  const profile = QUALITY_PROFILES[quality];
 
   return (
     <div className="board3d-wrapper">
       <div className="board3d-container">
-        <Canvas ref={canvasRef} shadows dpr={[1, 2]}>
-          <BoardScene quality={quality} onResetCamera={handleResetCamera} />
+        <Canvas key={quality} shadows={profile.shadows} dpr={profile.dpr} frameloop="demand">
+          <BoardScene quality={quality} resetRef={resetRef} />
         </Canvas>
       </div>
 
       {/* UI Controls - outside Canvas */}
       <div className="board3d-controls">
-        <button onClick={handleResetCamera} title="Reset camera view" className="btn-reset-camera">
+        <button onClick={() => resetRef.current?.()} title="Reset camera view" className="btn-reset-camera">
           ↻ Reset View
         </button>
         <div className="quality-selector">
           <label>
             Quality:
-            <select value={quality} onChange={(e) => setQuality(e.target.value as 'low' | 'high')}>
+            <select value={quality} onChange={(e) => setQuality(e.target.value as Quality3D)}>
               <option value="low">Low</option>
+              <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
           </label>

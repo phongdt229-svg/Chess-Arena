@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import type { Piece as PieceType } from '@chess-arena/chess-core';
 import { useGameStore } from '../../store/gameStore';
 import { squareToWorld } from './coords';
@@ -16,6 +16,7 @@ interface Piece3DProps {
 export default function Piece3D({ square, piece }: Piece3DProps) {
   const { selectedSquare, lastMoveFrom, lastMoveTo, clickSquare } = useGameStore();
   const meshRef = useRef<THREE.Mesh>(null);
+  const invalidate = useThree((s) => s.invalidate);
   const justMoved = lastMoveTo === square && lastMoveFrom !== null;
   const startPos = useRef(justMoved ? squareToWorld(lastMoveFrom) : squareToWorld(square));
   const endPos = useRef(squareToWorld(square));
@@ -35,12 +36,14 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
       endPos.current = coords;
       animProgress.current = 0;
       isAnimating.current = true;
+      invalidate();
     }
-  }, [lastMoveFrom, lastMoveTo, square, coords]);
+  }, [lastMoveFrom, lastMoveTo, square, coords, invalidate]);
 
   useFrame(() => {
     if (!meshRef.current || !isAnimating.current) return;
 
+    invalidate(); // the render loop is on demand, so ask for the next frame while animating
     animProgress.current += 0.06;
 
     if (animProgress.current >= 1) {

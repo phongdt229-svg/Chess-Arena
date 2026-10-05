@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/gameStore';
 import { squareToWorld } from './coords';
+import type { Quality3D } from './quality';
 
 interface Tile3DProps {
   index: number;
@@ -9,7 +10,7 @@ interface Tile3DProps {
   isLegalTarget: boolean;
   isLastMove: boolean;
   isInCheck: boolean;
-  quality: 'low' | 'high';
+  quality: Quality3D;
 }
 
 export default function Tile3D({
@@ -39,8 +40,8 @@ export default function Tile3D({
     () =>
       new THREE.MeshStandardMaterial({
         color,
-        metalness: quality === 'high' ? 0.1 : 0,
-        roughness: quality === 'high' ? 0.3 : 0.5,
+        metalness: quality === 'low' ? 0 : 0.1,
+        roughness: quality === 'low' ? 0.5 : 0.3,
       }),
     [color, quality]
   );
