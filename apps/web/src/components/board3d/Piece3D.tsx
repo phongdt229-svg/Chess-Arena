@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { Piece as PieceType } from '@chess-arena/chess-core';
 import { useGameStore } from '../../store/gameStore';
+import { useBoardView } from '../../store/useBoardView';
 import { squareToWorld } from './coords';
 import { getPieceGeometry, getPieceMaterial } from './pieceGeometry';
 
@@ -14,10 +15,11 @@ interface Piece3DProps {
 }
 
 export default function Piece3D({ square, piece }: Piece3DProps) {
-  const { selectedSquare, lastMoveFrom, lastMoveTo, clickSquare } = useGameStore();
+  const clickSquare = useGameStore((s) => s.clickSquare);
+  const { selectedSquare, lastMoveFrom, lastMoveTo, reviewing } = useBoardView();
   const meshRef = useRef<THREE.Mesh>(null);
   const invalidate = useThree((s) => s.invalidate);
-  const justMoved = lastMoveTo === square && lastMoveFrom !== null;
+  const justMoved = !reviewing && lastMoveTo === square && lastMoveFrom !== null;
   const startPos = useRef(justMoved ? squareToWorld(lastMoveFrom) : squareToWorld(square));
   const endPos = useRef(squareToWorld(square));
   const animProgress = useRef(0);
@@ -31,14 +33,14 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   const material = useMemo(() => getPieceMaterial(piece.color), [piece.color]);
 
   useEffect(() => {
-    if (lastMoveTo === square && lastMoveFrom !== null) {
+    if (!reviewing && lastMoveTo === square && lastMoveFrom !== null) {
       startPos.current = squareToWorld(lastMoveFrom);
       endPos.current = coords;
       animProgress.current = 0;
       isAnimating.current = true;
       invalidate();
     }
-  }, [lastMoveFrom, lastMoveTo, square, coords, invalidate]);
+  }, [lastMoveFrom, lastMoveTo, square, coords, invalidate, reviewing]);
 
   useFrame(() => {
     if (!meshRef.current || !isAnimating.current) return;

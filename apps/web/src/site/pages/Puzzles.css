@@ -76,9 +76,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.puzzle-board .board-2d-wrap,
 .puzzle-board .board-2d {
   max-width: none;
-  max-height: none;
 }
 
 .puzzle-panel h2 {

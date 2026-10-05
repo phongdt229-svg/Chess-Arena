@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback, type MutableRefObject } from 
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
+import { useBoardView } from '../../store/useBoardView';
+import ReviewBadge from '../ui/ReviewBadge';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
 import CapturedGhost from './CapturedGhost';
@@ -15,7 +17,8 @@ interface SceneProps {
 }
 
 function BoardScene({ quality, resetRef }: SceneProps) {
-  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation, history, fen } = useGameStore();
+  const { orientation, history, fen } = useGameStore();
+  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare } = useBoardView();
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const previousLength = useRef(history.length);
 
@@ -103,6 +106,7 @@ export default function Board3D() {
   return (
     <div className="board3d-wrapper">
       <div className="board3d-container">
+        <ReviewBadge />
         <Canvas key={quality} shadows={profile.shadows} dpr={profile.dpr} frameloop="demand">
           <BoardScene quality={quality} resetRef={resetRef} />
         </Canvas>

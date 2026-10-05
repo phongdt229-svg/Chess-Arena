@@ -1,0 +1,34 @@
+.review-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.9rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6d5300;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+.review-badge button {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: #ff9800;
+  color: white;
+  font-weight: 700;
+}
+
+.review-badge.inline {
+  position: static;
+  transform: none;
+  margin: 0.7rem auto 0;
+  width: fit-content;
+}

@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { useBoardView } from '../../store/useBoardView';
+import ReviewBadge from '../ui/ReviewBadge';
 import Square from './Square';
 import { PIECE_SYMBOLS, type Slide } from './Piece';
 import { suppressNextClick } from './dragState';
@@ -23,7 +25,8 @@ interface DragView {
 }
 
 export default function Board2D() {
-  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation, history, result, clickSquare } = useGameStore();
+  const { orientation, history, result, clickSquare } = useGameStore();
+  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, reviewing } = useBoardView();
   const gridRef = useRef<HTMLDivElement>(null);
   const mountLength = useRef(history.length);
   const pending = useRef<{ from: number; x: number; y: number; id: number } | null>(null);
@@ -42,7 +45,7 @@ export default function Board2D() {
   }, [orientation]);
 
   const isLegalTarget = (sq: number) => legalMoves.some((m) => m.to === sq);
-  const animateMove = lastMoveFrom !== null && lastMoveTo !== null && history.length > mountLength.current;
+  const animateMove = !reviewing && lastMoveFrom !== null && lastMoveTo !== null && history.length > mountLength.current;
   const slide = animateMove ? slideOffset(lastMoveFrom!, lastMoveTo!, orientation) : undefined;
   const tabbableSquare = focusSq ?? selectedSquare ?? order[0];
 
@@ -122,7 +125,8 @@ export default function Board2D() {
   const dragged = drag ? board[drag.from] : null;
 
   return (
-    <div className="board-2d">
+    <div className="board-2d-wrap">
+    <div className={`board-2d ${reviewing ? 'reviewing' : ''}`}>
       <div
         ref={gridRef}
         className="board-grid"
@@ -167,6 +171,8 @@ export default function Board2D() {
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
+    </div>
+      <ReviewBadge inline />
     </div>
   );
 }
