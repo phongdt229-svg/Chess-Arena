@@ -36,13 +36,22 @@ if (is_file($configPath) && is_readable($configPath)) {
     }
 }
 
+// Where PHP looks and why it may fail (a path and ini value, never file contents or credentials)
+$where = [
+    'config_path' => $configPath,
+    'exists' => @file_exists($configPath),
+    'readable' => @is_readable($configPath),
+    'parent_dir_exists' => @is_dir(dirname($configPath)),
+    'open_basedir' => ini_get('open_basedir') ?: null,
+];
+
 $next = null;
 if (!$checks['php_8_1_or_newer']) {
     $next = 'Switch this site to PHP 8.1 or newer.';
 } elseif (!$checks['pdo_mysql']) {
     $next = 'Enable the pdo_mysql PHP extension.';
 } elseif (!$checks['config_file']) {
-    $next = 'Create config/config.php one level ABOVE public_html (copy config.example.php and fill in the database details).';
+    $next = 'Create the file named in config.config_path (copy config.example.php and fill in the database details). If open_basedir is set and does not include that folder, ask the host to allow it.';
 } elseif (!$checks['db_connection']) {
     $next = 'Check db_dsn, db_user and db_pass in config.php (' . ($problem ?? 'connection failed') . ').';
 } elseif (!$checks['tables']) {
@@ -51,4 +60,4 @@ if (!$checks['php_8_1_or_newer']) {
 
 $ok = $next === null;
 http_response_code($ok ? 200 : 503);
-echo json_encode(['ok' => $ok, 'checks' => $checks, 'next' => $next], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+echo json_encode(['ok' => $ok, 'checks' => $checks, 'config' => $where, 'next' => $next], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
