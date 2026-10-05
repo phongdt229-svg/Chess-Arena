@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import type { Piece as PieceType } from '@chess-arena/chess-core';
 import { useGameStore } from '../../store/gameStore';
 import { useBoardView } from '../../store/useBoardView';
 import { squareToWorld } from './coords';
+import { clickSuppressed } from '../board2d/dragState';
 import { getPieceGeometry, getPieceMaterial } from './pieceGeometry';
 
 const BOARD_SURFACE_Y = 0.05; // top face of the 0.1-thick tile
@@ -12,9 +13,11 @@ const BOARD_SURFACE_Y = 0.05; // top face of the 0.1-thick tile
 interface Piece3DProps {
   square: number;
   piece: PieceType;
+  dragPos?: { x: number; z: number } | null;
+  onPress?: (square: number, event: ThreeEvent<PointerEvent>) => void;
 }
 
-export default function Piece3D({ square, piece }: Piece3DProps) {
+export default function Piece3D({ square, piece, dragPos = null, onPress }: Piece3DProps) {
   const clickSquare = useGameStore((s) => s.clickSquare);
   const { selectedSquare, lastMoveFrom, lastMoveTo, reviewing } = useBoardView();
   const meshRef = useRef<THREE.Mesh>(null);
@@ -76,13 +79,14 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   return (
     <mesh
       ref={meshRef}
-      position={[coords.x, BOARD_SURFACE_Y + coords.y + yOffset, coords.z]}
+      position={dragPos ? [dragPos.x, BOARD_SURFACE_Y + 0.5, dragPos.z] : [coords.x, BOARD_SURFACE_Y + coords.y + yOffset, coords.z]}
       rotation={[0, baseRotation, 0]}
       geometry={geometry}
       material={material}
+      onPointerDown={(e) => onPress?.(square, e)}
       onClick={(e) => {
         e.stopPropagation();
-        clickSquare(square);
+        if (!clickSuppressed()) clickSquare(square);
       }}
       castShadow
       receiveShadow

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type MutableRefObject } from 'react';
+import * as THREE from 'three';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
@@ -10,6 +11,8 @@ import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
 import CapturedGhost from './CapturedGhost';
 import { capturedGhostFor, type CapturedGhost as Ghost } from './captured';
+import { useBoardDrag } from './useBoardDrag';
+import { squareToWorld } from './coords';
 import { QUALITY_PROFILES, cameraHome, defaultQuality, type Quality3D } from './quality';
 import './Board3D.css';
 
@@ -33,6 +36,7 @@ function BoardScene({ quality, resetRef }: SceneProps) {
   const removeGhost = useCallback((id: number) => setGhosts((list) => list.filter((g) => g.id !== id)), []);
   const { camera, invalidate } = useThree();
   const controlsRef = useRef<any>(null);
+  const { drag, onPress } = useBoardDrag(controlsRef);
   const profile = QUALITY_PROFILES[quality];
 
   const isLegalTarget = (sq: number) => legalMoves.some((m) => m.to === sq);
@@ -54,6 +58,22 @@ function BoardScene({ quality, resetRef }: SceneProps) {
       resetRef.current = null;
     };
   }, [camera, orientation, invalidate, resetRef]);
+
+  // Test hook (development only): where a square appears on screen, so browser tests can drag pieces
+  const { gl } = useThree();
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as unknown as { __board3d?: unknown }).__board3d = {
+      screenOf: (square: number, height = 0.05) => {
+        const { x, z } = squareToWorld(square);
+        const p = new THREE.Vector3(x, height, z);
+        camera.updateMatrixWorld();
+        p.project(camera);
+        const rect = gl.domElement.getBoundingClientRect();
+        return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height };
+      },
+    };
+  }, [camera, gl]);
 
   return (
     <>
@@ -94,7 +114,11 @@ function BoardScene({ quality, resetRef }: SceneProps) {
       ))}
 
       {/* Pieces */}
-      {board.map((piece, sq) => (piece ? <Piece3D key={`piece-${sq}`} square={sq} piece={piece} /> : null))}
+      {board.map((piece, sq) =>
+        piece ? (
+          <Piece3D key={`piece-${sq}`} square={sq} piece={piece} dragPos={drag?.from === sq ? drag : null} onPress={onPress} />
+        ) : null,
+      )}
       {ghosts.map((g) => (
         <CapturedGhost key={g.id} ghost={g} onDone={removeGhost} />
       ))}

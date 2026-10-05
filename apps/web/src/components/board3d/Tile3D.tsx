@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useGameStore } from '../../store/gameStore';
 import { squareToWorld } from './coords';
 import type { Quality3D } from './quality';
+import { clickSuppressed } from '../board2d/dragState';
 
 interface Tile3DProps {
   index: number;
@@ -54,7 +55,9 @@ export default function Tile3D({
       position={[coords.x, coords.y, coords.z]}
       geometry={geometry}
       material={material}
-      onClick={() => clickSquare(index)}
+      onClick={() => {
+        if (!clickSuppressed()) clickSquare(index);
+      }}
       castShadow
       receiveShadow
     >

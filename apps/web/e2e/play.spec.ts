@@ -79,3 +79,51 @@ test('3D board loads and the evaluation bar works', async ({ page }) => {
   await expect(page.locator('.eval-bar.floating')).toBeVisible();
   await page.getByRole('button', { name: /Reset View/ }).click();
 });
+
+test('drag and drop on the 3D board, and the camera does not orbit while a piece is held', async ({ page }) => {
+  await register(page);
+  await page.getByRole('button', { name: '3D View' }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.waitForFunction(() => Boolean((window as unknown as { __board3d?: unknown }).__board3d));
+
+  type Board3dHook = { screenOf: (n: number, height?: number) => { x: number; y: number } };
+  const screenOf = (sq: number, height?: number) =>
+    page.evaluate(([s, h]) => (window as unknown as { __board3d: Board3dHook }).__board3d.screenOf(s as number, h as number | undefined), [sq, height] as const);
+  // grab a piece by its head (0.55 above the board): the king in front would otherwise hide a pawn's body from the default camera
+  const drag = async (from: number, to: number) => {
+    const a = await screenOf(from, 0.55);
+    const b = await screenOf(to);
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    await page.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2, { steps: 4 });
+    await page.mouse.move(b.x, b.y, { steps: 4 });
+    await page.mouse.up();
+  };
+
+  const before = await screenOf(12);
+  await drag(12, 28); // e2 -> e4
+  await expect(moveList(page)).toHaveText(['e4']);
+  expect(await screenOf(12)).toEqual(before); // the camera stayed put
+
+  await drag(52, 36); // e7 -> e5
+  await expect(moveList(page)).toHaveText(['e4', 'e5']);
+
+  await drag(9, 41); // b2 -> b6 is illegal and must be ignored
+  await expect(moveList(page)).toHaveCount(2);
+});
+
+test('click to move on the 3D board', async ({ page }) => {
+  await register(page);
+  await page.getByRole('button', { name: '3D View' }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.waitForFunction(() => Boolean((window as unknown as { __board3d?: unknown }).__board3d));
+  type Board3dHook = { screenOf: (n: number, height?: number) => { x: number; y: number } };
+  const at = (sq: number, height?: number) =>
+    page.evaluate(([s, h]) => (window as unknown as { __board3d: Board3dHook }).__board3d.screenOf(s as number, h as number | undefined), [sq, height] as const);
+
+  const pawn = await at(12, 0.55); // the head of the e2 pawn
+  await page.mouse.click(pawn.x, pawn.y);
+  const target = await at(28);
+  await page.mouse.click(target.x, target.y);
+  await expect(moveList(page)).toHaveText(['e4']);
+});

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { squareToWorld, rotateCoords, indexToSquare, squareToIndex } from '../coords';
+import { squareToWorld, rotateCoords, indexToSquare, squareToIndex, worldToSquare } from '../coords';
 
 describe('coords', () => {
   describe('squareToWorld', () => {
@@ -67,5 +67,27 @@ describe('coords', () => {
     it('should convert h8 to 63', () => {
       expect(squareToIndex('h8')).toBe(63);
     });
+  });
+});
+
+describe('worldToSquare', () => {
+  it('is the inverse of squareToWorld for every square', () => {
+    for (let sq = 0; sq < 64; sq++) {
+      const { x, z } = squareToWorld(sq);
+      expect(worldToSquare(x, z)).toBe(sq);
+    }
+  });
+
+  it('accepts any point inside a square', () => {
+    const { x, z } = squareToWorld(28);
+    expect(worldToSquare(x + 0.49, z - 0.49)).toBe(28);
+    expect(worldToSquare(x - 0.49, z + 0.49)).toBe(28);
+  });
+
+  it('returns null outside the board', () => {
+    expect(worldToSquare(-4.1, 0)).toBeNull();
+    expect(worldToSquare(4.1, 0)).toBeNull();
+    expect(worldToSquare(0, 4.1)).toBeNull();
+    expect(worldToSquare(0, -4.1)).toBeNull();
   });
 });
