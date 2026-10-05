@@ -33,3 +33,6 @@ yarn-debug.log*
 
 # Dev-only mock auth database (see apps/web/vite.config.ts)
 .dev-auth.json
+
+# Upload bundle made from apps/web/dist
+apps/web/*.zip
