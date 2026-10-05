@@ -12,6 +12,7 @@ const ERROR_TEXT: Record<string, string> = {
   VALIDATION: 'Invalid details.',
   NETWORK: 'Could not reach the server. Please try again later.',
   SERVER_ERROR: 'Server error. Please try again later.',
+  API_UNAVAILABLE: 'The account service is not available on this server yet. Please try again later.',
 };
 
 function validate(tab: Tab, username: string, password: string, confirm: string): string | null {

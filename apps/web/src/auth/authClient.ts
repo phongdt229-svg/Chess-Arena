@@ -29,8 +29,9 @@ async function call<T>(path: string, init: RequestInit, token?: string): Promise
   } catch {
     // non-JSON response
   }
-  if (!res.ok || !body?.ok) {
-    throw new AuthError(body?.error ?? 'SERVER_ERROR', res.status);
+  if (!body) throw new AuthError('API_UNAVAILABLE', res.status);
+  if (!res.ok || !body.ok) {
+    throw new AuthError(body.error ?? 'SERVER_ERROR', res.status);
   }
   return body.data as T;
 }

@@ -2,7 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
 
 // Dev-only stand-in for apps/api (PHP). Same routes, JSON shape and error codes; users live in memory.
 // Accounts are kept in a git-ignored file so they survive dev-server restarts (editing this config restarts it)
@@ -118,6 +118,27 @@ function devAuthMock(): Plugin {
   };
 }
 
+// Ship the PHP API inside dist/ so uploading dist/ deploys the whole site (schema and example config stay out of the web root)
+function copyApi(): Plugin {
+  const apiDir = path.resolve(__dirname, '../api');
+  const skip = new Set(['schema.sql', 'config.example.php']);
+  const walk = (dir: string, rel = ''): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const full = path.join(dir, name);
+      const r = rel ? `${rel}/${name}` : name;
+      return statSync(full).isDirectory() ? walk(full, r) : skip.has(r) ? [] : [r];
+    });
+  return {
+    name: 'copy-api',
+    apply: 'build',
+    generateBundle() {
+      for (const file of walk(apiDir)) {
+        this.emitFile({ type: 'asset', fileName: `api/${file}`, source: readFileSync(path.join(apiDir, file)) });
+      }
+    },
+  };
+}
+
 // AdSense requires /ads.txt; generate it from the publisher id so it can never drift from the build config
 function adsTxt(publisherId: string | undefined): Plugin {
   const match = publisherId?.match(/^ca-(pub-\d{10,20})$/);
@@ -131,7 +152,7 @@ function adsTxt(publisherId: string | undefined): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), devAuthMock(), adsTxt(loadEnv(mode, process.cwd(), 'VITE_').VITE_ADSENSE_CLIENT)],
+  plugins: [react(), devAuthMock(), copyApi(), adsTxt(loadEnv(mode, process.cwd(), 'VITE_').VITE_ADSENSE_CLIENT)],
   resolve: {
     alias: {
       '@chess-core': path.resolve(__dirname, '../../packages/chess-core/src'),
