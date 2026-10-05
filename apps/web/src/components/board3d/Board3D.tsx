@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect, type MutableRefObject } from 'react';
+import { useState, useRef, useEffect, useCallback, type MutableRefObject } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
+import CapturedGhost from './CapturedGhost';
+import { capturedGhostFor, type CapturedGhost as Ghost } from './captured';
 import { QUALITY_PROFILES, cameraHome, defaultQuality, type Quality3D } from './quality';
 import './Board3D.css';
 
@@ -13,7 +15,16 @@ interface SceneProps {
 }
 
 function BoardScene({ quality, resetRef }: SceneProps) {
-  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation } = useGameStore();
+  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, orientation, history, fen } = useGameStore();
+  const [ghosts, setGhosts] = useState<Ghost[]>([]);
+  const previousLength = useRef(history.length);
+
+  useEffect(() => {
+    const ghost = capturedGhostFor(previousLength.current, history, fen.split(' ')[1] === 'b' ? 'b' : 'w');
+    previousLength.current = history.length;
+    if (ghost) setGhosts((list) => [...list, ghost]);
+  }, [history, fen]);
+  const removeGhost = useCallback((id: number) => setGhosts((list) => list.filter((g) => g.id !== id)), []);
   const { camera, invalidate } = useThree();
   const controlsRef = useRef<any>(null);
   const profile = QUALITY_PROFILES[quality];
@@ -77,6 +88,9 @@ function BoardScene({ quality, resetRef }: SceneProps) {
 
       {/* Pieces */}
       {board.map((piece, sq) => (piece ? <Piece3D key={`piece-${sq}`} square={sq} piece={piece} /> : null))}
+      {ghosts.map((g) => (
+        <CapturedGhost key={g.id} ghost={g} onDone={removeGhost} />
+      ))}
     </>
   );
 }
