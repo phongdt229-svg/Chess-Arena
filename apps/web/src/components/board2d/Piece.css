@@ -59,3 +59,10 @@
   transform: translate(-50%, -50%);
   line-height: 1;
 }
+
+/* A square is 12.5cqw wide; on phones the glyph is allowed to fill almost all of it */
+@container (max-width: 520px) {
+  .piece {
+    font-size: 13.2cqw;
+  }
+}

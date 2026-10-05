@@ -14,6 +14,7 @@ export default function CapturedGhost({ ghost, onDone }: { ghost: Ghost; onDone:
   const meshRef = useRef<THREE.Mesh>(null);
   const elapsed = useRef(0);
   const invalidate = useThree((s) => s.invalidate);
+  const baseScale = useThree((s) => (s.size.width < 600 ? 1.2 : 1));
   const pos = squareToWorld(ghost.square);
 
   const geometry = useMemo(() => getPieceGeometry(ghost.type), [ghost.type]);
@@ -32,7 +33,7 @@ export default function CapturedGhost({ ghost, onDone }: { ghost: Ghost; onDone:
     const t = Math.min(1, Math.max(0, (elapsed.current - DELAY) / DURATION));
     const eased = t * t;
     mesh.position.y = BOARD_SURFACE_Y - eased * 0.45;
-    mesh.scale.setScalar(1 - eased * 0.4);
+    mesh.scale.setScalar(baseScale * (1 - eased * 0.4));
     material.opacity = 1 - eased;
     if (t >= 1) onDone(ghost.id);
     else invalidate();

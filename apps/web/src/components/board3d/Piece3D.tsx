@@ -22,6 +22,7 @@ export default function Piece3D({ square, piece, dragPos = null, onPress }: Piec
   const { selectedSquare, lastMoveFrom, lastMoveTo, reviewing } = useBoardView();
   const meshRef = useRef<THREE.Mesh>(null);
   const invalidate = useThree((s) => s.invalidate);
+  const pieceScale = useThree((s) => (s.size.width < 600 ? 1.2 : 1)); // bigger pieces on phones
   const justMoved = !reviewing && lastMoveTo === square && lastMoveFrom !== null;
   const startPos = useRef(justMoved ? squareToWorld(lastMoveFrom) : squareToWorld(square));
   const endPos = useRef(squareToWorld(square));
@@ -81,6 +82,7 @@ export default function Piece3D({ square, piece, dragPos = null, onPress }: Piec
       ref={meshRef}
       position={dragPos ? [dragPos.x, BOARD_SURFACE_Y + 0.5, dragPos.z] : [coords.x, BOARD_SURFACE_Y + coords.y + yOffset, coords.z]}
       rotation={[0, baseRotation, 0]}
+      scale={pieceScale}
       geometry={geometry}
       material={material}
       onPointerDown={(e) => onPress?.(square, e)}
