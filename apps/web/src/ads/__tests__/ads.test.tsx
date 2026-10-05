@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { adsEnabled, getAdsConfig } from '../config';
+import { adsEnabled, getAdsConfig, slotFor, PLACEMENTS, type AdPlacement } from '../config';
 import { useConsentStore } from '../consentStore';
-import AdSlot from '../AdSlot';
+import AdSlot, { RAIL_QUERY } from '../AdSlot';
 import AdConsent from '../AdConsent';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -18,9 +18,9 @@ function mount(node: React.ReactElement) {
   return { el, unmount: () => act(() => root.unmount()) };
 }
 
-function stubMedia(matches: boolean) {
+function stubMedia(matches: boolean | ((query: string) => boolean)) {
   window.matchMedia = ((query: string) => ({
-    matches,
+    matches: typeof matches === 'function' ? matches(query) : matches,
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -163,5 +163,88 @@ describe('AdConsent banner', () => {
     act(() => (b.el.querySelectorAll('button')[0] as HTMLButtonElement).click());
     expect(useConsentStore.getState().consent).toBe('denied');
     b.unmount();
+  });
+});
+
+describe('placements and fallbacks', () => {
+  it('every placement is documented', () => {
+    const all: AdPlacement[] = ['home', 'homeBottom', 'content', 'bottom', 'rail', 'game', 'gameMobile'];
+    for (const p of all) expect(PLACEMENTS[p]).toBeTruthy();
+  });
+
+  it('a placement uses its own ad unit, else a related one, else nothing', () => {
+    const onlyBase = getAdsConfig({ VITE_ADSENSE_CLIENT: CLIENT, VITE_ADSENSE_SLOT_HOME: '1111111111', VITE_ADSENSE_SLOT_CONTENT: '2222222222', VITE_ADSENSE_SLOT_GAME: '3333333333' });
+    expect(slotFor('homeBottom', onlyBase)).toBe('1111111111');
+    expect(slotFor('bottom', onlyBase)).toBe('2222222222');
+    expect(slotFor('rail', onlyBase)).toBe('2222222222');
+    expect(slotFor('gameMobile', onlyBase)).toBe('3333333333');
+
+    const withOwn = getAdsConfig({ ...{ VITE_ADSENSE_CLIENT: CLIENT, VITE_ADSENSE_SLOT_CONTENT: '2222222222' }, VITE_ADSENSE_SLOT_BOTTOM: '4444444444' });
+    expect(slotFor('bottom', withOwn)).toBe('4444444444');
+    expect(slotFor('rail', withOwn)).toBe('2222222222');
+
+    const none = getAdsConfig({ VITE_ADSENSE_CLIENT: CLIENT, VITE_ADSENSE_SLOT_HOME: '1111111111' });
+    expect(slotFor('gameMobile', none)).toBeNull();
+    expect(slotFor('home', none)).toBe('1111111111');
+  });
+
+  it('rejects malformed ids for the new variables too', () => {
+    const c = getAdsConfig({ VITE_ADSENSE_CLIENT: CLIENT, VITE_ADSENSE_SLOT_RAIL: 'abc', VITE_ADSENSE_SLOT_BOTTOM: '12 34' });
+    expect(c.slots.rail).toBeNull();
+    expect(c.slots.bottom).toBeNull();
+  });
+});
+
+describe('AdSlot new placements', () => {
+  const configureBase = () => {
+    vi.stubEnv('VITE_ADSENSE_CLIENT', CLIENT);
+    vi.stubEnv('VITE_ADSENSE_SLOT_CONTENT', '2222222222');
+    vi.stubEnv('VITE_ADSENSE_SLOT_GAME', '3333333333');
+    useConsentStore.setState({ consent: 'granted' });
+  };
+
+  it('bottom and rail reuse the content ad unit when they have none', () => {
+    configureBase();
+    const a = mount(<AdSlot placement="bottom" />);
+    const b = mount(<AdSlot placement="rail" />);
+    expect(a.el.querySelector('ins')!.getAttribute('data-ad-slot')).toBe('2222222222');
+    expect(b.el.querySelector('ins')!.getAttribute('data-ad-slot')).toBe('2222222222');
+    a.unmount();
+    b.unmount();
+  });
+
+  it('mobileOnly renders on small screens and not on desktop', () => {
+    configureBase();
+    stubMedia((q) => q.includes('max-width'));
+    const phone = mount(<AdSlot placement="gameMobile" mobileOnly />);
+    expect(phone.el.querySelector('ins')!.getAttribute('data-ad-slot')).toBe('3333333333');
+    phone.unmount();
+
+    stubMedia((q) => q.includes('min-width'));
+    const desktop = mount(<AdSlot placement="gameMobile" mobileOnly />);
+    expect(desktop.el.querySelector('ins')).toBeNull();
+    desktop.unmount();
+  });
+
+  it('the sticky rail only appears when the screen is wide enough', () => {
+    configureBase();
+    stubMedia((q) => q === RAIL_QUERY);
+    const wide = mount(<AdSlot placement="rail" media={RAIL_QUERY} />);
+    expect(wide.el.querySelector('ins')).not.toBeNull();
+    wide.unmount();
+
+    stubMedia(false);
+    const narrow = mount(<AdSlot placement="rail" media={RAIL_QUERY} />);
+    expect(narrow.el.querySelector('ins')).toBeNull();
+    narrow.unmount();
+  });
+
+  it('nothing is rendered or loaded for a placement with no usable ad unit', () => {
+    vi.stubEnv('VITE_ADSENSE_CLIENT', CLIENT);
+    vi.stubEnv('VITE_ADSENSE_SLOT_HOME', '1111111111');
+    useConsentStore.setState({ consent: 'granted' });
+    const { el, unmount } = mount(<AdSlot placement="gameMobile" mobileOnly />);
+    expect(el.querySelector('ins')).toBeNull();
+    unmount();
   });
 });

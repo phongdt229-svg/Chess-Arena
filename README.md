@@ -39,3 +39,6 @@ To deploy from GitHub instead of uploading by hand, add the secrets `DEPLOY_HOST
 **Deploy** workflow. Use the site's own user for `DEPLOY_USER` so the files get the right owner.
 
 Optional ads: copy `apps/web/.env.example` to `apps/web/.env.production`, fill in your AdSense ids and rebuild.
+There are seven banner positions (Home x2, in-content, end of article, a sticky side banner on the Guide, the game sidebar on desktop and the
+bottom of the game page on phones). Create at least three ad units (home, content, game); positions without their own unit reuse a related one.
+Positions are never shown on login, legal, profile or settings pages, and never over the board.

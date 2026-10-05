@@ -113,6 +113,7 @@ export default function GameApp() {
         <aside className="sidebar">
           <Controls onNewGameClick={handleNewGame} />
           <AdSlot placement="game" desktopOnly />
+          <AdSlot placement="gameMobile" mobileOnly />
         </aside>
       </main>
 
