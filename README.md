@@ -21,6 +21,9 @@ pnpm test                              # unit tests
    (for example `/home/example.com/config/config.php` when the web root is `/home/example.com/public_html`) and fill in the database details.
 5. **Check** `https://your-domain/api/health.php`. It must answer `"ok": true`; otherwise `next` says what is missing.
    Delete `api/health.php` once everything works if you prefer not to expose it.
-6. File permissions: folders `755`, files `644`, owned by the site user.
+6. File ownership and permissions: folders `755`, files `644`, **owned by the site's own user, not root**.
+   On LiteSpeed/CyberPanel, PHP files owned by another user (for example after uploading or extracting as root) or writable by group/others
+   are refused with `403 Forbidden`, while static files such as `index.html` still load. Fix with
+   `chown -R SITEUSER:SITEUSER public_html` (the site user is the owner of `public_html`: `stat -c %U public_html`) and the chmod values above.
 
 Optional ads: copy `apps/web/.env.example` to `apps/web/.env.production`, fill in your AdSense ids and rebuild.
