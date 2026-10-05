@@ -187,7 +187,6 @@ export class GameEngine {
   }
 
   getKingSquare(color: Color): Square {
-    const fen = this.chess.fen();
     const board = this.getBoard();
     for (let i = 0; i < 64; i++) {
       const piece = board[i];

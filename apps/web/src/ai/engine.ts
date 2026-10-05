@@ -1,4 +1,4 @@
-import { Chess } from 'chess.js';
+import { Chess, type Move } from 'chess.js';
 
 export interface EngineOptions {
   depth: number;
@@ -107,7 +107,7 @@ function negamax(
   const moves = chess.moves({ verbose: true });
 
   // Sort moves: captures first, promotions first
-  moves.sort((a: any, b: any) => {
+  moves.sort((a: Move, b: Move) => {
     const aScore = (b.captured ? PIECE_VALUES[b.captured] : 0) + (b.promotion ? 1000 : 0);
     const bScore = (a.captured ? PIECE_VALUES[a.captured] : 0) + (a.promotion ? 1000 : 0);
     return aScore - bScore;
@@ -116,7 +116,7 @@ function negamax(
   let maxEval = -Infinity;
 
   for (const move of moves) {
-    chess.move(move as any);
+    chess.move(move);
     const evaluation = -negamax(chess, depth - 1, -beta, -alpha, !isMaximizing, startTime, timeLimit);
     chess.undo();
 
@@ -139,7 +139,7 @@ export function findBestMove(fen: string, options: EngineOptions): string {
   const timeLimit = options.timeMs || 1000;
 
   // Score each move
-  const scoredMoves = moves.map((move: any) => {
+  const scoredMoves = moves.map((move: Move) => {
     chess.move(move);
     const score = -negamax(chess, options.depth - 1, -Infinity, Infinity, false, startTime, timeLimit);
     chess.undo();
@@ -149,15 +149,15 @@ export function findBestMove(fen: string, options: EngineOptions): string {
   // Handle randomness
   if (options.randomness > 0 && Math.random() < options.randomness / 100) {
     // Play random move among top moves
-    const sorted = scoredMoves.sort((a: any, b: any) => b.score - a.score);
+    const sorted = scoredMoves.sort((a, b) => b.score - a.score);
     const threshold = sorted[0].score - 100; // Within 1 pawn
-    const suboptimalMoves = sorted.filter((m: any) => m.score >= threshold);
+    const suboptimalMoves = sorted.filter((m) => m.score >= threshold);
     const random = suboptimalMoves[Math.floor(Math.random() * suboptimalMoves.length)];
     return `${random.move.from}${random.move.to}${random.move.promotion || ''}`;
   }
 
   // Play best move
-  const best = scoredMoves.reduce((a: any, b: any) => (a.score > b.score ? a : b));
+  const best = scoredMoves.reduce((a, b) => (a.score > b.score ? a : b));
   return `${best.move.from}${best.move.to}${best.move.promotion || ''}`;
 }
 
@@ -172,8 +172,8 @@ class SearchTimeout extends Error {}
 
 function orderedMoves(chess: Chess) {
   const moves = chess.moves({ verbose: true });
-  const value = (m: any) => (m.captured ? PIECE_VALUES[m.captured] : 0) + (m.promotion ? 1000 : 0);
-  return moves.sort((a: any, b: any) => value(b) - value(a));
+  const value = (m: Move) => (m.captured ? PIECE_VALUES[m.captured] : 0) + (m.promotion ? 1000 : 0);
+  return moves.sort((a, b) => value(b) - value(a));
 }
 
 // Alpha-beta that gives up (by throwing) once the deadline passes, so a half-finished depth can be discarded
@@ -183,7 +183,7 @@ function abortableSearch(chess: Chess, depth: number, alpha: number, beta: numbe
 
   let best = -Infinity;
   for (const move of orderedMoves(chess)) {
-    chess.move(move as any);
+    chess.move(move);
     const value = -abortableSearch(chess, depth - 1, -beta, -alpha, clock);
     chess.undo();
     if (value > best) best = value;
@@ -211,16 +211,16 @@ export function analyse(fen: string, options: { maxDepth: number; timeMs: number
 
   const clock = { deadline: Date.now() + options.timeMs, nodes: 0 };
   let result: Analysis | null = null;
-  let rootOrder = orderedMoves(root).map((m: any) => `${m.from}${m.to}${m.promotion ?? ''}`);
+  let rootOrder = orderedMoves(root).map((m) => `${m.from}${m.to}${m.promotion ?? ''}`);
 
   for (let depth = 1; depth <= options.maxDepth; depth++) {
     const chess = new Chess(fen);
-    const byUci = new Map<string, any>(chess.moves({ verbose: true }).map((m: any) => [`${m.from}${m.to}${m.promotion ?? ''}`, m]));
+    const byUci = new Map<string, Move>(chess.moves({ verbose: true }).map((m) => [`${m.from}${m.to}${m.promotion ?? ''}`, m]));
     let best: { uci: string; score: number } | null = null;
     let alpha = -Infinity;
     try {
       for (const uci of rootOrder) {
-        chess.move(byUci.get(uci) as any);
+        chess.move(byUci.get(uci)!);
         const score = -abortableSearch(chess, depth - 1, -Infinity, -alpha, clock);
         chess.undo();
         if (!best || score > best.score) best = { uci, score };

@@ -7,9 +7,14 @@ Monorepo: `packages/chess-core` (rules), `apps/web` (React + Vite site), `apps/a
 
 ```bash
 pnpm install
-pnpm --filter @chess-arena/web dev     # http://localhost:5173, sign-up/login use an in-memory mock API
-pnpm test                              # unit tests
+pnpm --filter @chess-arena/chess-core build   # the web app uses chess-core's built output; rebuild after changing it
+pnpm --filter @chess-arena/web dev            # http://localhost:5173, sign-up/login use a mock API (accounts kept in apps/web/.dev-auth.json)
+pnpm test                                     # unit tests
+pnpm lint
+pnpm --filter @chess-arena/web e2e            # browser tests (Playwright); set CHROME_PATH to use an installed Chrome
 ```
+
+CI (`.github/workflows/ci.yml`) runs lint, unit tests, the build and the end-to-end tests on every push and pull request.
 
 ## Deploy (PHP 8.1+ and MySQL, no Node needed on the server)
 
@@ -29,5 +34,8 @@ pnpm test                              # unit tests
 Troubleshooting sign-up: set `'debug' => true` in `config/config.php` to make the form show the real server error (database access denied,
 missing table, ...). Set it back to `false` afterwards. A `403` page that is not JSON comes from the web server itself, so read the site's
 `error_log` (CyberPanel: Websites, Manage, Logs).
+
+To deploy from GitHub instead of uploading by hand, add the secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH` and run the
+**Deploy** workflow. Use the site's own user for `DEPLOY_USER` so the files get the right owner.
 
 Optional ads: copy `apps/web/.env.example` to `apps/web/.env.production`, fill in your AdSense ids and rebuild.
