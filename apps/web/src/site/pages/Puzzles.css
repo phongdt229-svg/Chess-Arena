@@ -81,10 +81,6 @@
   max-height: none;
 }
 
-.puzzle-board .piece {
-  font-size: min(8vw, 3.3rem);
-}
-
 .puzzle-panel h2 {
   font-size: 1.3rem;
   margin-bottom: 0.4rem;
