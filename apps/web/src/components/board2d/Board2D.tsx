@@ -163,7 +163,7 @@ export default function Board2D() {
       </div>
 
       {drag && dragged && (
-        <div className={`drag-ghost piece ${dragged.color === 'w' ? 'white' : 'black'}`} style={{ left: drag.x, top: drag.y, fontSize: drag.size * 0.78 }} aria-hidden="true">
+        <div className={`drag-ghost piece ${dragged.color === 'w' ? 'white' : 'black'}`} style={{ left: drag.x, top: drag.y, fontSize: drag.size * 0.9 }} aria-hidden="true">
           {PIECE_SYMBOLS[dragged.type]}
         </div>
       )}
