@@ -22,14 +22,29 @@ function json_fail(string $error, int $status = 400, array $extra = []): never
     exit;
 }
 
-// config/config.php lives one level above the web root; loaded once
+// config/config.php lives one level above the web root (either derived from this file's location or from the server's document root)
+function config_candidates(): array
+{
+    $paths = [dirname(__DIR__, 3) . '/config/config.php'];
+    $root = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+    if ($root !== '') {
+        $paths[] = dirname(rtrim($root, '/')) . '/config/config.php';
+    }
+    return array_values(array_unique($paths));
+}
+
 function app_config(): array
 {
     static $config = null;
     if ($config === null) {
-        $path = dirname(__DIR__, 3) . '/config/config.php';
-        $loaded = is_file($path) && is_readable($path) ? require $path : null;
-        $config = is_array($loaded) ? $loaded : [];
+        $config = [];
+        foreach (config_candidates() as $path) {
+            if (is_file($path) && is_readable($path)) {
+                $loaded = require $path;
+                $config = is_array($loaded) ? $loaded : [];
+                break;
+            }
+        }
     }
     return $config;
 }

@@ -14,8 +14,37 @@ $checks = [
 ];
 $problem = null;
 
-$configPath = dirname(__DIR__, 2) . '/config/config.php';
-if (is_file($configPath) && is_readable($configPath)) {
+$candidates = [dirname(__DIR__, 2) . '/config/config.php'];
+$docRoot = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+if ($docRoot !== '') {
+    $candidates[] = dirname(rtrim($docRoot, '/')) . '/config/config.php';
+}
+$candidates = array_values(array_unique($candidates));
+
+// Paths, flags, permission bits and numeric owner ids only: never file contents or credentials
+$where = [
+    'script_owner_uid' => getmyuid(),
+    'open_basedir' => ini_get('open_basedir') ?: null,
+    'candidates' => [],
+];
+$configPath = null;
+foreach ($candidates as $candidate) {
+    $exists = @file_exists($candidate);
+    $readable = @is_readable($candidate);
+    $where['candidates'][] = [
+        'path' => $candidate,
+        'exists' => $exists,
+        'readable' => $readable,
+        'perms' => $exists ? substr(sprintf('%o', @fileperms($candidate)), -4) : null,
+        'owner_uid' => $exists ? @fileowner($candidate) : null,
+        'parent_dir_exists' => @is_dir(dirname($candidate)),
+    ];
+    if ($configPath === null && $exists && $readable) {
+        $configPath = $candidate;
+    }
+}
+
+if ($configPath !== null) {
     $checks['config_file'] = true;
     $config = require $configPath;
     if ($checks['pdo_mysql'] && is_array($config)) {
@@ -36,22 +65,13 @@ if (is_file($configPath) && is_readable($configPath)) {
     }
 }
 
-// Where PHP looks and why it may fail (a path and ini value, never file contents or credentials)
-$where = [
-    'config_path' => $configPath,
-    'exists' => @file_exists($configPath),
-    'readable' => @is_readable($configPath),
-    'parent_dir_exists' => @is_dir(dirname($configPath)),
-    'open_basedir' => ini_get('open_basedir') ?: null,
-];
-
 $next = null;
 if (!$checks['php_8_1_or_newer']) {
     $next = 'Switch this site to PHP 8.1 or newer.';
 } elseif (!$checks['pdo_mysql']) {
     $next = 'Enable the pdo_mysql PHP extension.';
 } elseif (!$checks['config_file']) {
-    $next = 'Create the file named in config.config_path (copy config.example.php and fill in the database details). If open_basedir is set and does not include that folder, ask the host to allow it.';
+    $next = 'config.php was not found or is not readable at any path in config.candidates. Create it there, and make it readable by the site user (owner_uid should equal script_owner_uid, perms 0644 or 0640).';
 } elseif (!$checks['db_connection']) {
     $next = 'Check db_dsn, db_user and db_pass in config.php (' . ($problem ?? 'connection failed') . ').';
 } elseif (!$checks['tables']) {
