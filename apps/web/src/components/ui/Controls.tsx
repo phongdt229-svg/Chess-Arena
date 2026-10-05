@@ -4,6 +4,7 @@ import MoveHistory from './MoveHistory';
 import GameStatus from './GameStatus';
 import ClockPanel from './ClockPanel';
 import GameIO from './GameIO';
+import AnalysisPanel from './AnalysisPanel';
 import './Controls.css';
 
 interface ControlsProps {
@@ -32,6 +33,7 @@ export default function Controls({ onNewGameClick }: ControlsProps) {
         <button className="btn-block btn-secondary" onClick={toggleSound} aria-pressed={soundEnabled}>
           {soundEnabled ? '🔊 Sound: On' : '🔇 Sound: Off'}
         </button>
+        <AnalysisPanel />
         <GameIO />
         <button className="btn-block btn-primary" onClick={onNewGameClick}>
           ♻ New Game

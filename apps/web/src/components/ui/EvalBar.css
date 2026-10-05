@@ -1,0 +1,72 @@
+.eval-bar {
+  position: relative;
+  flex: 0 0 22px;
+  width: 22px;
+  align-self: stretch;
+  background: #262626;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.eval-white {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f4f4f4;
+  transition: height 0.45s ease;
+}
+
+.eval-bar.flipped .eval-white {
+  bottom: auto;
+  top: 0;
+}
+
+.eval-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The label sits at the end of the winner's colour */
+.eval-label.on-white {
+  bottom: 0;
+  color: #222;
+}
+
+.eval-label.on-black {
+  top: 0;
+  color: #eee;
+}
+
+.eval-bar.flipped .eval-label.on-white {
+  bottom: auto;
+  top: 0;
+}
+
+.eval-bar.flipped .eval-label.on-black {
+  top: auto;
+  bottom: 0;
+}
+
+.eval-bar.floating {
+  position: absolute;
+  left: 0.7rem;
+  top: 18%;
+  bottom: 18%;
+  height: auto;
+  z-index: 10;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eval-white {
+    transition: none;
+  }
+}

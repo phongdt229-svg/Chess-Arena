@@ -6,6 +6,7 @@ const LEGACY_SOUND_KEY = 'chess-arena-sound';
 
 export interface Settings {
   soundEnabled: boolean;
+  showEval: boolean;
   defaultView: '2d' | '3d';
   defaultMode: 'local' | 'ai';
   defaultColor: 'w' | 'b' | 'random';
@@ -15,6 +16,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   soundEnabled: true,
+  showEval: false,
   defaultView: '2d',
   defaultMode: 'local',
   defaultColor: 'random',
@@ -27,6 +29,7 @@ export function sanitizeSettings(raw: unknown): Settings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   return {
     soundEnabled: typeof r.soundEnabled === 'boolean' ? r.soundEnabled : DEFAULT_SETTINGS.soundEnabled,
+    showEval: typeof r.showEval === 'boolean' ? r.showEval : DEFAULT_SETTINGS.showEval,
     defaultView: r.defaultView === '3d' ? '3d' : '2d',
     defaultMode: r.defaultMode === 'ai' ? 'ai' : 'local',
     defaultColor: r.defaultColor === 'w' || r.defaultColor === 'b' ? r.defaultColor : 'random',
@@ -65,6 +68,7 @@ interface SettingsState extends Settings {
 
 const pick = (s: SettingsState): Settings => ({
   soundEnabled: s.soundEnabled,
+  showEval: s.showEval,
   defaultView: s.defaultView,
   defaultMode: s.defaultMode,
   defaultColor: s.defaultColor,

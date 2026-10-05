@@ -59,3 +59,13 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.hint-line {
+  margin: -0.25rem 0 0;
+  padding: 0.4rem 0.6rem;
+  background: #e8f5e9;
+  border-radius: 6px;
+  color: #1b5e20;
+  font-size: 0.9rem;
+  text-align: center;
+}

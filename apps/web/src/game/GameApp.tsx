@@ -13,6 +13,7 @@ import { usePageMeta } from '../site/usePageMeta';
 import AdSlot from '../ads/AdSlot';
 import { useAutoSave } from '../persistence/useAutoSave';
 import { useRecordStats } from '../persistence/useRecordStats';
+import { useAnalysisSync } from '../store/useAnalysisSync';
 import { useSettingsStore } from '../store/settingsStore';
 import { clearSave, readSave, type SavedGame } from '../persistence/savedGame';
 import '../App.css';
@@ -28,6 +29,7 @@ export default function GameApp() {
   usePageMeta('Play');
   useGameSounds();
   useRecordStats(user?.id);
+  useAnalysisSync();
 
   const [resumeOffer, setResumeOffer] = useState<SavedGame | null>(() =>
     user && !importedPgn ? readSave(user.id) : null,
@@ -100,7 +102,7 @@ export default function GameApp() {
 
       <main className="app-main">
         <div className="board-container">
-          {viewMode === '2d' && <Board2D />}
+          {viewMode === '2d' && <Board2D evalBar />}
           {viewMode === '3d' && (
             <Suspense fallback={<div className="loading">Loading 3D board...</div>}>
               <Board3D />

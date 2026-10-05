@@ -160,3 +160,82 @@ export function findBestMove(fen: string, options: EngineOptions): string {
   const best = scoredMoves.reduce((a: any, b: any) => (a.score > b.score ? a : b));
   return `${best.move.from}${best.move.to}${best.move.promotion || ''}`;
 }
+
+export interface Analysis {
+  move: string; // best move in UCI, '' when the game is over
+  score: number; // centipawns from White's point of view (mate scores are about ±30000)
+  mate: number | null; // signed moves to mate (positive: White mates), 0 when the side to move is already mated
+  depth: number; // deepest fully searched depth
+}
+
+class SearchTimeout extends Error {}
+
+function orderedMoves(chess: Chess) {
+  const moves = chess.moves({ verbose: true });
+  const value = (m: any) => (m.captured ? PIECE_VALUES[m.captured] : 0) + (m.promotion ? 1000 : 0);
+  return moves.sort((a: any, b: any) => value(b) - value(a));
+}
+
+// Alpha-beta that gives up (by throwing) once the deadline passes, so a half-finished depth can be discarded
+function abortableSearch(chess: Chess, depth: number, alpha: number, beta: number, clock: { deadline: number; nodes: number }): number {
+  if ((++clock.nodes & 255) === 0 && Date.now() > clock.deadline) throw new SearchTimeout();
+  if (depth === 0 || chess.isGameOver()) return evaluateForSideToMove(chess, depth);
+
+  let best = -Infinity;
+  for (const move of orderedMoves(chess)) {
+    chess.move(move as any);
+    const value = -abortableSearch(chess, depth - 1, -beta, -alpha, clock);
+    chess.undo();
+    if (value > best) best = value;
+    if (best > alpha) alpha = best;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+function matesFrom(score: number, searchedDepth: number): number | null {
+  if (Math.abs(score) < MATE_SCORE) return null;
+  const remaining = Math.abs(score) - MATE_SCORE; // depth left when the mate was found
+  const plies = Math.max(1, searchedDepth - remaining);
+  return Math.sign(score) * Math.ceil(plies / 2);
+}
+
+// Iterative deepening: always reports the deepest depth that finished inside the time budget
+export function analyse(fen: string, options: { maxDepth: number; timeMs: number }): Analysis {
+  const root = new Chess(fen);
+  const whiteToMove = root.turn() === 'w';
+  const toWhite = (score: number) => (whiteToMove ? score : -score);
+
+  if (root.isCheckmate()) return { move: '', score: toWhite(-MATE_SCORE), mate: 0, depth: 0 };
+  if (root.isGameOver()) return { move: '', score: 0, mate: null, depth: 0 };
+
+  const clock = { deadline: Date.now() + options.timeMs, nodes: 0 };
+  let result: Analysis | null = null;
+  let rootOrder = orderedMoves(root).map((m: any) => `${m.from}${m.to}${m.promotion ?? ''}`);
+
+  for (let depth = 1; depth <= options.maxDepth; depth++) {
+    const chess = new Chess(fen);
+    const byUci = new Map<string, any>(chess.moves({ verbose: true }).map((m: any) => [`${m.from}${m.to}${m.promotion ?? ''}`, m]));
+    let best: { uci: string; score: number } | null = null;
+    let alpha = -Infinity;
+    try {
+      for (const uci of rootOrder) {
+        chess.move(byUci.get(uci) as any);
+        const score = -abortableSearch(chess, depth - 1, -Infinity, -alpha, clock);
+        chess.undo();
+        if (!best || score > best.score) best = { uci, score };
+        alpha = Math.max(alpha, score);
+      }
+    } catch (e) {
+      if (e instanceof SearchTimeout) break;
+      throw e;
+    }
+    if (!best) break;
+    result = { move: best.uci, score: toWhite(best.score), mate: matesFrom(toWhite(best.score), depth), depth };
+    rootOrder = [best.uci, ...rootOrder.filter((u) => u !== best!.uci)]; // search the previous best first next time
+    if (matesFrom(best.score, depth) !== null) break; // a forced mate cannot be improved by looking deeper
+  }
+
+  // Not even depth 1 finished (absurdly short budget): fall back to any legal move
+  return result ?? { move: rootOrder[0], score: 0, mate: null, depth: 0 };
+}

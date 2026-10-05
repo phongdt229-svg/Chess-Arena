@@ -10,6 +10,7 @@ interface Tile3DProps {
   isLegalTarget: boolean;
   isLastMove: boolean;
   isInCheck: boolean;
+  isHint?: boolean;
   quality: Quality3D;
 }
 
@@ -19,6 +20,7 @@ export default function Tile3D({
   isLegalTarget,
   isLastMove,
   isInCheck,
+  isHint = false,
   quality,
 }: Tile3DProps) {
   const { clickSquare } = useGameStore();
@@ -30,7 +32,8 @@ export default function Tile3D({
 
   // Determine tile color - more refined board colors
   let color = isDark ? 0x7a6f63 : 0xf4e8d8; // Refined brown / Light cream
-  if (isInCheck) color = 0xd84545; // Deep red for check
+  if (isHint) color = 0x3fae5a; // Suggested move
+  else if (isInCheck) color = 0xd84545; // Deep red for check
   else if (isSelected) color = 0xc4d651; // Olive green for selected
   else if (isLastMove) color = isDark ? 0x9d9968 : 0xe6d966; // Highlight last move
   else if (isLegalTarget) color = isDark ? 0x7a6f63 : 0xf4e8d8; // Normal (marker will show)

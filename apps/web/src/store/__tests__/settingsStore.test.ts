@@ -11,9 +11,9 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings(null)).toEqual(DEFAULT_SETTINGS);
     expect(sanitizeSettings('x')).toEqual(DEFAULT_SETTINGS);
     expect(
-      sanitizeSettings({ soundEnabled: false, defaultView: '3d', defaultMode: 'ai', defaultColor: 'b', defaultLevel: 5, defaultTime: '5+0' }),
-    ).toEqual({ soundEnabled: false, defaultView: '3d', defaultMode: 'ai', defaultColor: 'b', defaultLevel: 5, defaultTime: '5+0' });
-    expect(sanitizeSettings({ defaultLevel: 99, defaultTime: 'nope', defaultView: 'vr', defaultMode: 'online', defaultColor: 'x', soundEnabled: 'yes' })).toEqual(
+      sanitizeSettings({ soundEnabled: false, showEval: true, defaultView: '3d', defaultMode: 'ai', defaultColor: 'b', defaultLevel: 5, defaultTime: '5+0' }),
+    ).toEqual({ soundEnabled: false, showEval: true, defaultView: '3d', defaultMode: 'ai', defaultColor: 'b', defaultLevel: 5, defaultTime: '5+0' });
+    expect(sanitizeSettings({ defaultLevel: 99, defaultTime: 'nope', defaultView: 'vr', defaultMode: 'online', defaultColor: 'x', soundEnabled: 'yes', showEval: 'yes' })).toEqual(
       DEFAULT_SETTINGS,
     );
   });

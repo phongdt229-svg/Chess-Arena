@@ -28,6 +28,13 @@ export default function Settings() {
         </label>
         <label className="settings-row">
           <span>
+            <strong>Evaluation bar</strong>
+            <small>Shows who is better next to the board, calculated in your browser.</small>
+          </span>
+          <input type="checkbox" checked={s.showEval} onChange={() => s.update({ showEval: !s.showEval })} aria-label="Show evaluation bar" />
+        </label>
+        <label className="settings-row">
+          <span>
             <strong>Board when you start playing</strong>
             <small>The 3D board needs a more powerful device than the 2D board.</small>
           </span>

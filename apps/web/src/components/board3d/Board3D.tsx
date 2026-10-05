@@ -4,6 +4,8 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
 import { useBoardView } from '../../store/useBoardView';
 import ReviewBadge from '../ui/ReviewBadge';
+import EvalBar from '../ui/EvalBar';
+import { useAnalysisStore } from '../../store/analysisStore';
 import Tile3D from './Tile3D';
 import Piece3D from './Piece3D';
 import CapturedGhost from './CapturedGhost';
@@ -18,7 +20,8 @@ interface SceneProps {
 
 function BoardScene({ quality, resetRef }: SceneProps) {
   const { orientation, history, fen } = useGameStore();
-  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare } = useBoardView();
+  const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, reviewing } = useBoardView();
+  const hint = useAnalysisStore((s) => s.hint);
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const previousLength = useRef(history.length);
 
@@ -85,6 +88,7 @@ function BoardScene({ quality, resetRef }: SceneProps) {
           isLegalTarget={isLegalTarget(sq)}
           isLastMove={isLastMoveSquare(sq)}
           isInCheck={sq === inCheckSquare}
+          isHint={!reviewing && hint !== null && (sq === hint.from || sq === hint.to)}
           quality={quality}
         />
       ))}
@@ -107,6 +111,7 @@ export default function Board3D() {
     <div className="board3d-wrapper">
       <div className="board3d-container">
         <ReviewBadge />
+        <EvalBar floating />
         <Canvas key={quality} shadows={profile.shadows} dpr={profile.dpr} frameloop="demand">
           <BoardScene quality={quality} resetRef={resetRef} />
         </Canvas>

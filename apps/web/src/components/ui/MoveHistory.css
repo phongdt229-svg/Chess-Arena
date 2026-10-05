@@ -39,6 +39,7 @@
 
 .move-history-head h3 {
   margin: 0;
+  white-space: nowrap;
 }
 
 .move-nav {

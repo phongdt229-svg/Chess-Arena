@@ -13,6 +13,7 @@ interface SquareProps {
   isLegalTarget: boolean;
   isLastMove: boolean;
   isInCheck: boolean;
+  hint?: 'from' | 'to';
   fileLabel?: string;
   rankLabel?: string;
   tabbable: boolean;
@@ -29,6 +30,7 @@ function Square({
   isLegalTarget,
   isLastMove,
   isInCheck,
+  hint,
   fileLabel,
   rankLabel,
   tabbable,
@@ -50,6 +52,7 @@ function Square({
     isLegalTarget && piece && 'has-piece',
     isLastMove && 'last-move',
     isInCheck && 'in-check',
+    hint && `hint-${hint}`,
   ]
     .filter(Boolean)
     .join(' ');
@@ -60,6 +63,7 @@ function Square({
     isSelected ? 'selected' : null,
     isLegalTarget ? 'legal move' : null,
     isInCheck ? 'king in check' : null,
+    hint === 'from' ? 'suggested move from here' : hint === 'to' ? 'suggested move to here' : null,
   ]
     .filter(Boolean)
     .join(', ');

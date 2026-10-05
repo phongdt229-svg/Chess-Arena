@@ -2,6 +2,8 @@ import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from
 import { useGameStore } from '../../store/gameStore';
 import { useBoardView } from '../../store/useBoardView';
 import ReviewBadge from '../ui/ReviewBadge';
+import EvalBar from '../ui/EvalBar';
+import { useAnalysisStore } from '../../store/analysisStore';
 import Square from './Square';
 import { PIECE_SYMBOLS, type Slide } from './Piece';
 import { suppressNextClick } from './dragState';
@@ -24,9 +26,10 @@ interface DragView {
   size: number;
 }
 
-export default function Board2D() {
+export default function Board2D({ evalBar = false }: { evalBar?: boolean }) {
   const { orientation, history, result, clickSquare } = useGameStore();
   const { board, selectedSquare, legalMoves, lastMoveFrom, lastMoveTo, inCheckSquare, reviewing } = useBoardView();
+  const hint = useAnalysisStore((s) => s.hint);
   const gridRef = useRef<HTMLDivElement>(null);
   const mountLength = useRef(history.length);
   const pending = useRef<{ from: number; x: number; y: number; id: number } | null>(null);
@@ -126,6 +129,8 @@ export default function Board2D() {
 
   return (
     <div className="board-2d-wrap">
+    <div className="board-2d-main">
+    {evalBar && <EvalBar />}
     <div className={`board-2d ${reviewing ? 'reviewing' : ''}`}>
       <div
         ref={gridRef}
@@ -149,6 +154,7 @@ export default function Board2D() {
                 isLegalTarget={isLegalTarget(sq)}
                 isLastMove={lastMoveFrom === sq || lastMoveTo === sq}
                 isInCheck={sq === inCheckSquare}
+                hint={hint && !reviewing ? (sq === hint.from ? 'from' : sq === hint.to ? 'to' : undefined) : undefined}
                 rankLabel={col === 0 ? String(Math.floor(sq / 8) + 1) : undefined}
                 fileLabel={row === 7 ? String.fromCharCode(97 + (sq % 8)) : undefined}
                 tabbable={sq === tabbableSquare}
@@ -171,6 +177,7 @@ export default function Board2D() {
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
+    </div>
     </div>
       <ReviewBadge inline />
     </div>
