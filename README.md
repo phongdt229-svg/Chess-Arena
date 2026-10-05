@@ -26,4 +26,8 @@ pnpm test                              # unit tests
    are refused with `403 Forbidden`, while static files such as `index.html` still load. Fix with
    `chown -R SITEUSER:SITEUSER public_html` (the site user is the owner of `public_html`: `stat -c %U public_html`) and the chmod values above.
 
+Troubleshooting sign-up: set `'debug' => true` in `config/config.php` to make the form show the real server error (database access denied,
+missing table, ...). Set it back to `false` afterwards. A `403` page that is not JSON comes from the web server itself, so read the site's
+`error_log` (CyberPanel: Websites, Manage, Logs).
+
 Optional ads: copy `apps/web/.env.example` to `apps/web/.env.production`, fill in your AdSense ids and rebuild.

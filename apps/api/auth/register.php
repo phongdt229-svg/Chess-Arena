@@ -14,8 +14,7 @@ try {
     if ($e->getCode() === '23000') {
         json_fail('USERNAME_TAKEN', 409);
     }
-    error_log('register failed: ' . $e->getMessage());
-    json_fail('SERVER_ERROR', 500);
+    server_error($e);
 }
 
 $userId = (int) $pdo->lastInsertId();
