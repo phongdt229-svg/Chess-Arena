@@ -1,6 +1,7 @@
+import type { CSSProperties } from 'react';
 import './Piece.css';
 
-const PIECE_SYMBOLS: Record<string, string> = {
+export const PIECE_SYMBOLS: Record<string, string> = {
   p: '♟',
   n: '♞',
   b: '♝',
@@ -9,27 +10,22 @@ const PIECE_SYMBOLS: Record<string, string> = {
   k: '♚',
 };
 
-interface PieceProps {
-  piece: { type: string; color: string };
-  index: number;
+export interface Slide {
+  dx: number; // start offset in squares, relative to the destination square
+  dy: number;
 }
 
-export default function Piece({ piece, index }: PieceProps) {
-  const symbol = PIECE_SYMBOLS[piece.type];
-  const isWhite = piece.color === 'w';
+interface PieceProps {
+  piece: { type: string; color: string };
+  slide?: Slide;
+  dragging?: boolean;
+}
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('from', index.toString());
-  };
-
+export default function Piece({ piece, slide, dragging }: PieceProps) {
+  const style = slide ? ({ '--dx': slide.dx, '--dy': slide.dy } as CSSProperties) : undefined;
   return (
-    <div
-      className={`piece ${isWhite ? 'white' : 'black'}`}
-      draggable
-      onDragStart={handleDragStart}
-    >
-      {symbol}
+    <div className={`piece ${piece.color === 'w' ? 'white' : 'black'} ${slide ? 'slide' : ''} ${dragging ? 'dragging' : ''}`} style={style}>
+      {PIECE_SYMBOLS[piece.type]}
     </div>
   );
 }

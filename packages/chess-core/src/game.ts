@@ -1,6 +1,13 @@
 import { Chess, type Move as ChessJsMove } from 'chess.js';
 import type { Color, Move, GameResult, Square, Piece } from './types';
 
+export interface PositionSnapshot {
+  fen: string;
+  board: (Piece | null)[];
+  lastMove: { from: Square; to: Square } | null;
+  inCheckSquare: Square | null;
+}
+
 export class GameEngine {
   private chess: Chess;
 
@@ -133,8 +140,32 @@ export class GameEngine {
   }
 
   getBoard(): (Piece | null)[] {
+    return GameEngine.boardOf(this.chess);
+  }
+
+  // The position after `ply` half-moves of the current game (0 = start), without touching the live game
+  snapshotAt(ply: number): PositionSnapshot | null {
+    const total = this.chess.history().length;
+    if (!Number.isInteger(ply) || ply < 0 || ply > total) return null;
+
+    const copy = new Chess();
+    copy.loadPgn(this.chess.pgn());
+    while (copy.history().length > ply) copy.undo();
+
+    const board = GameEngine.boardOf(copy);
+    const last = copy.history({ verbose: true }).at(-1);
+    const turn = copy.turn();
+    return {
+      fen: copy.fen(),
+      board,
+      lastMove: last ? { from: this.squareToIndex(last.from), to: this.squareToIndex(last.to) } : null,
+      inCheckSquare: copy.isCheck() ? board.findIndex((p) => p?.type === 'k' && p.color === turn) : null,
+    };
+  }
+
+  private static boardOf(chess: Chess): (Piece | null)[] {
     const board: (Piece | null)[] = Array(64).fill(null);
-    const boardArray = this.chess.board();
+    const boardArray = chess.board();
 
     for (let rank = 0; rank < 8; rank++) {
       for (let file = 0; file < 8; file++) {
@@ -156,7 +187,6 @@ export class GameEngine {
   }
 
   getKingSquare(color: Color): Square {
-    const fen = this.chess.fen();
     const board = this.getBoard();
     for (let i = 0; i < 64; i++) {
       const piece = board[i];

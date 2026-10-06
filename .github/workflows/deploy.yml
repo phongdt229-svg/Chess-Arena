@@ -1,0 +1,53 @@
+name: Deploy
+
+# Manual: builds the site and copies dist/ (website + PHP API) to the server over SSH.
+# Required repository secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_PATH (the web root, e.g. /home/example.com/public_html/)
+# Optional repository variables for ads: ADSENSE_CLIENT, ADSENSE_SLOT_HOME, ADSENSE_SLOT_CONTENT, ADSENSE_SLOT_GAME
+# Connect as the site's own user so the uploaded files are owned by it; LiteSpeed refuses to run PHP owned by another user.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build chess-core
+        run: pnpm --filter @chess-arena/chess-core build
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build site
+        run: pnpm --filter @chess-arena/web build
+        env:
+          VITE_ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+          VITE_ADSENSE_SLOT_HOME: ${{ vars.ADSENSE_SLOT_HOME }}
+          VITE_ADSENSE_SLOT_CONTENT: ${{ vars.ADSENSE_SLOT_CONTENT }}
+          VITE_ADSENSE_SLOT_GAME: ${{ vars.ADSENSE_SLOT_GAME }}
+
+      - name: Upload with rsync
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          rsync -rltvz --chmod=D755,F644 \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            apps/web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"

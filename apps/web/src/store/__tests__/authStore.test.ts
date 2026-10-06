@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('../../auth/authClient', () => {
   class AuthError extends Error {
-    constructor(public code: string, public status: number) {
+    constructor(public code: string, public status: number, public detail?: string) {
       super(code);
     }
   }
@@ -97,5 +97,20 @@ describe('authStore', () => {
     expect(useAuthStore.getState().user).toBeNull();
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(mocked.logout).toHaveBeenCalledWith('abc');
+  });
+
+  it('exposes the server detail so setup problems are visible, and clears it on the next attempt', async () => {
+    mocked.register.mockRejectedValueOnce(new authClient.AuthError('DB_UNAVAILABLE', 500, 'PDOException: Access denied'));
+    await useAuthStore.getState().register('alice', 'password1');
+    expect(useAuthStore.getState().error).toBe('DB_UNAVAILABLE');
+    expect(useAuthStore.getState().errorDetail).toBe('PDOException: Access denied');
+
+    mocked.register.mockRejectedValueOnce(new authClient.AuthError('API_UNAVAILABLE', 403, 'HTTP 403'));
+    await useAuthStore.getState().register('alice', 'password1');
+    expect(useAuthStore.getState().errorDetail).toBe('HTTP 403');
+
+    mocked.register.mockResolvedValueOnce({ token: 'abc', user });
+    await useAuthStore.getState().register('alice', 'password1');
+    expect(useAuthStore.getState().errorDetail).toBeNull();
   });
 });

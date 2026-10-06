@@ -6,6 +6,15 @@ import { evaluateFen } from '../ai/engine';
 import { NO_CLOCK, makeClock, type ClockState, type TimeControl } from './clock';
 import type { SavedGame } from '../persistence/savedGame';
 
+// A past position shown on the board while the user browses the move list (the live game is untouched)
+export interface ReviewView {
+  fen: string;
+  board: (Piece | null)[];
+  lastMoveFrom: number | null;
+  lastMoveTo: number | null;
+  inCheckSquare: number | null;
+}
+
 export interface NewGameOptions {
   mode?: 'local' | 'ai';
   playerColor?: Color;
@@ -33,11 +42,14 @@ interface GameState {
   aiThinking: boolean;
   lastOptions: NewGameOptions | null;
   clock: ClockState;
+  reviewPly: number | null;
+  reviewView: ReviewView | null;
 }
 
 interface GameActions extends GameState {
   newGame: (options?: NewGameOptions) => void;
   tickClock: () => void;
+  reviewTo: (ply: number | null) => void;
   clickSquare: (sq: number) => void;
   tryMove: (from: number, to: number, promotion?: string) => void;
   choosePromotion: (promotion: 'q' | 'r' | 'b' | 'n') => void;
@@ -123,6 +135,8 @@ const createInitialState = (): GameState => ({
   aiThinking: false,
   lastOptions: null,
   clock: NO_CLOCK,
+  reviewPly: null,
+  reviewView: null,
 });
 
 const syncState = (state: GameState, eng: GameEngine): Partial<GameState> => {
@@ -168,7 +182,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
 
   clickSquare: (sq) => {
     const state = get();
-    if (!engine || state.pendingPromotion || state.aiThinking || state.result.status !== 'ongoing') return;
+    if (!engine || state.pendingPromotion || state.aiThinking || state.reviewPly !== null || state.result.status !== 'ongoing') return;
 
     // In AI mode, only allow moves by the player
     if (state.gameMode === 'ai' && engine.getCurrentTurn() !== state.playerColor) return;
@@ -201,7 +215,7 @@ export const useGameStore = create<GameActions>((set, get) => ({
   },
 
   tryMove: (from, to, promotion) => {
-    if (!engine || get().result.status !== 'ongoing') return;
+    if (!engine || get().result.status !== 'ongoing' || get().reviewPly !== null) return;
 
     const uci = promotion ? `${indexToSquare(from)}${indexToSquare(to)}${promotion}` : `${indexToSquare(from)}${indexToSquare(to)}`;
     const move = engine.makeMove(uci);
@@ -258,6 +272,8 @@ export const useGameStore = create<GameActions>((set, get) => ({
       pendingPromotion: null,
       redoStack: [...undone.reverse(), ...state.redoStack],
       aiThinking: false,
+      reviewPly: null,
+      reviewView: null,
     });
     scheduleAi(300);
   },
@@ -283,6 +299,8 @@ export const useGameStore = create<GameActions>((set, get) => ({
       legalMoves: [],
       redoStack: stack,
       aiThinking: false,
+      reviewPly: null,
+      reviewView: null,
     });
     scheduleAi(300);
   },
@@ -396,6 +414,30 @@ export const useGameStore = create<GameActions>((set, get) => ({
       legalMoves: [],
     });
     return true;
+  },
+
+  reviewTo: (ply) => {
+    const state = get();
+    if (!engine) return;
+    if (ply === null || ply >= state.history.length) {
+      if (state.reviewPly !== null) set({ reviewPly: null, reviewView: null });
+      return;
+    }
+    const snap = engine.snapshotAt(ply);
+    if (!snap) return;
+    set({
+      reviewPly: ply,
+      reviewView: {
+        fen: snap.fen,
+        board: snap.board,
+        lastMoveFrom: snap.lastMove?.from ?? null,
+        lastMoveTo: snap.lastMove?.to ?? null,
+        inCheckSquare: snap.inCheckSquare,
+      },
+      selectedSquare: null,
+      legalMoves: [],
+      pendingPromotion: null,
+    });
   },
 
   tickClock: () => {

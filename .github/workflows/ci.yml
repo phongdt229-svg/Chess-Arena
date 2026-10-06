@@ -9,31 +9,61 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
-
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 12.x
+      - uses: pnpm/action-setup@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          node-version: 20
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The web app consumes chess-core through its built output, so build it before linting and testing
+      - name: Build chess-core
+        run: pnpm --filter @chess-arena/chess-core build
+
       - name: Lint
         run: pnpm lint
 
-      - name: Run tests
+      - name: Unit tests
         run: pnpm test
 
       - name: Build
         run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build chess-core
+        run: pnpm --filter @chess-arena/chess-core build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @chess-arena/web exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm --filter @chess-arena/web e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7

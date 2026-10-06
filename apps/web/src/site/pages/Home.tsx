@@ -118,6 +118,10 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="container" style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <AdSlot placement="homeBottom" />
+      </div>
+
       {!authed && (
         <section className="home-final">
           <div className="container narrow">

@@ -4,4 +4,6 @@ return [
     'db_dsn'  => 'mysql:host=localhost;dbname=chess_arena;charset=utf8mb4',
     'db_user' => 'chess_user',
     'db_pass' => 'change-me',
+    // true = 500 responses include the exception message (for setting up). Set back to false when it works.
+    'debug'   => false,
 ];

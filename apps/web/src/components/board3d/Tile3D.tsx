@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/gameStore';
 import { squareToWorld } from './coords';
+import type { Quality3D } from './quality';
+import { clickSuppressed } from '../board2d/dragState';
 
 interface Tile3DProps {
   index: number;
@@ -9,7 +11,8 @@ interface Tile3DProps {
   isLegalTarget: boolean;
   isLastMove: boolean;
   isInCheck: boolean;
-  quality: 'low' | 'high';
+  isHint?: boolean;
+  quality: Quality3D;
 }
 
 export default function Tile3D({
@@ -18,6 +21,7 @@ export default function Tile3D({
   isLegalTarget,
   isLastMove,
   isInCheck,
+  isHint = false,
   quality,
 }: Tile3DProps) {
   const { clickSquare } = useGameStore();
@@ -29,7 +33,8 @@ export default function Tile3D({
 
   // Determine tile color - more refined board colors
   let color = isDark ? 0x7a6f63 : 0xf4e8d8; // Refined brown / Light cream
-  if (isInCheck) color = 0xd84545; // Deep red for check
+  if (isHint) color = 0x3fae5a; // Suggested move
+  else if (isInCheck) color = 0xd84545; // Deep red for check
   else if (isSelected) color = 0xc4d651; // Olive green for selected
   else if (isLastMove) color = isDark ? 0x9d9968 : 0xe6d966; // Highlight last move
   else if (isLegalTarget) color = isDark ? 0x7a6f63 : 0xf4e8d8; // Normal (marker will show)
@@ -39,8 +44,8 @@ export default function Tile3D({
     () =>
       new THREE.MeshStandardMaterial({
         color,
-        metalness: quality === 'high' ? 0.1 : 0,
-        roughness: quality === 'high' ? 0.3 : 0.5,
+        metalness: quality === 'low' ? 0 : 0.1,
+        roughness: quality === 'low' ? 0.5 : 0.3,
       }),
     [color, quality]
   );
@@ -50,7 +55,9 @@ export default function Tile3D({
       position={[coords.x, coords.y, coords.z]}
       geometry={geometry}
       material={material}
-      onClick={() => clickSquare(index)}
+      onClick={() => {
+        if (!clickSuppressed()) clickSquare(index);
+      }}
       castShadow
       receiveShadow
     >

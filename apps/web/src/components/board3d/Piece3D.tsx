@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import type { Piece as PieceType } from '@chess-arena/chess-core';
 import { useGameStore } from '../../store/gameStore';
+import { useBoardView } from '../../store/useBoardView';
 import { squareToWorld } from './coords';
+import { clickSuppressed } from '../board2d/dragState';
 import { getPieceGeometry, getPieceMaterial } from './pieceGeometry';
 
 const BOARD_SURFACE_Y = 0.05; // top face of the 0.1-thick tile
@@ -11,12 +13,17 @@ const BOARD_SURFACE_Y = 0.05; // top face of the 0.1-thick tile
 interface Piece3DProps {
   square: number;
   piece: PieceType;
+  dragPos?: { x: number; z: number } | null;
+  onPress?: (square: number, event: ThreeEvent<PointerEvent>) => void;
 }
 
-export default function Piece3D({ square, piece }: Piece3DProps) {
-  const { selectedSquare, lastMoveFrom, lastMoveTo, clickSquare } = useGameStore();
+export default function Piece3D({ square, piece, dragPos = null, onPress }: Piece3DProps) {
+  const clickSquare = useGameStore((s) => s.clickSquare);
+  const { selectedSquare, lastMoveFrom, lastMoveTo, reviewing } = useBoardView();
   const meshRef = useRef<THREE.Mesh>(null);
-  const justMoved = lastMoveTo === square && lastMoveFrom !== null;
+  const invalidate = useThree((s) => s.invalidate);
+  const pieceScale = useThree((s) => (s.size.width < 600 ? 1.2 : 1)); // bigger pieces on phones
+  const justMoved = !reviewing && lastMoveTo === square && lastMoveFrom !== null;
   const startPos = useRef(justMoved ? squareToWorld(lastMoveFrom) : squareToWorld(square));
   const endPos = useRef(squareToWorld(square));
   const animProgress = useRef(0);
@@ -30,17 +37,19 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   const material = useMemo(() => getPieceMaterial(piece.color), [piece.color]);
 
   useEffect(() => {
-    if (lastMoveTo === square && lastMoveFrom !== null) {
+    if (!reviewing && lastMoveTo === square && lastMoveFrom !== null) {
       startPos.current = squareToWorld(lastMoveFrom);
       endPos.current = coords;
       animProgress.current = 0;
       isAnimating.current = true;
+      invalidate();
     }
-  }, [lastMoveFrom, lastMoveTo, square, coords]);
+  }, [lastMoveFrom, lastMoveTo, square, coords, invalidate, reviewing]);
 
   useFrame(() => {
     if (!meshRef.current || !isAnimating.current) return;
 
+    invalidate(); // the render loop is on demand, so ask for the next frame while animating
     animProgress.current += 0.06;
 
     if (animProgress.current >= 1) {
@@ -71,13 +80,15 @@ export default function Piece3D({ square, piece }: Piece3DProps) {
   return (
     <mesh
       ref={meshRef}
-      position={[coords.x, BOARD_SURFACE_Y + coords.y + yOffset, coords.z]}
+      position={dragPos ? [dragPos.x, BOARD_SURFACE_Y + 0.5, dragPos.z] : [coords.x, BOARD_SURFACE_Y + coords.y + yOffset, coords.z]}
       rotation={[0, baseRotation, 0]}
+      scale={pieceScale}
       geometry={geometry}
       material={material}
+      onPointerDown={(e) => onPress?.(square, e)}
       onClick={(e) => {
         e.stopPropagation();
-        clickSquare(square);
+        if (!clickSuppressed()) clickSquare(square);
       }}
       castShadow
       receiveShadow

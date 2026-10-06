@@ -1,6 +1,6 @@
 import { Link } from '../../router/router';
 import { usePageMeta } from '../usePageMeta';
-import AdSlot from '../../ads/AdSlot';
+import AdSlot, { RAIL_QUERY } from '../../ads/AdSlot';
 import { adsEnabled } from '../../ads/config';
 import './Guide.css';
 
@@ -104,6 +104,11 @@ export default function Guide() {
             <div className="faq-answer">{item.a}</div>
           </details>
         ))}
+      </div>
+
+      <AdSlot placement="bottom" />
+      <div className="ad-rail-wrap">
+        <AdSlot placement="rail" media={RAIL_QUERY} />
       </div>
     </div>
   );

@@ -1,14 +1,13 @@
-import { findBestMove, type EngineOptions } from './engine';
+import { analyse, findBestMove, type Analysis, type EngineOptions } from './engine';
 
-interface WorkerRequest {
-  id: number;
-  fen: string;
-  level: number;
-}
+type WorkerRequest =
+  | { id: number; kind?: 'move'; fen: string; level: number }
+  | { id: number; kind: 'analyse'; fen: string; maxDepth: number; timeMs: number };
 
 interface WorkerResponse {
   id: number;
   uci?: string;
+  analysis?: Analysis;
   error?: string;
 }
 
@@ -22,11 +21,20 @@ const LEVEL_OPTIONS: Record<number, EngineOptions> = {
 };
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-  const { id, fen, level } = event.data;
+  const request = event.data;
+  const { id } = request;
 
   try {
-    const options = LEVEL_OPTIONS[level] || LEVEL_OPTIONS[3];
-    const uci = findBestMove(fen, options);
+    if (request.kind === 'analyse') {
+      const maxDepth = Math.min(8, Math.max(1, request.maxDepth));
+      const timeMs = Math.min(5000, Math.max(50, request.timeMs));
+      const response: WorkerResponse = { id, analysis: analyse(request.fen, { maxDepth, timeMs }) };
+      self.postMessage(response);
+      return;
+    }
+
+    const options = LEVEL_OPTIONS[request.level] || LEVEL_OPTIONS[3];
+    const uci = findBestMove(request.fen, options);
 
     const response: WorkerResponse = { id, uci };
     self.postMessage(response);

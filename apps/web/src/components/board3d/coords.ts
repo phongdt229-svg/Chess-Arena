@@ -21,6 +21,13 @@ export function squareToWorld(sq: number): WorldCoords {
   };
 }
 
+// The square under a point on the board plane, or null outside the board (inverse of squareToWorld)
+export function worldToSquare(x: number, z: number): number | null {
+  const file = Math.round(x + 3.5);
+  const rank = Math.round(3.5 - z);
+  return file >= 0 && file < 8 && rank >= 0 && rank < 8 ? rank * 8 + file : null;
+}
+
 export function indexToSquare(index: number): string {
   const file = String.fromCharCode(97 + (index % 8));
   const rank = Math.floor(index / 8) + 1;

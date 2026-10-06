@@ -88,3 +88,30 @@
   color: #e6e8f0;
   border: 1px solid #6b7186;
 }
+
+.ad-slot.ad-homeBottom,
+.ad-slot.ad-bottom {
+  min-height: 120px;
+}
+
+.ad-slot.ad-gameMobile {
+  margin: 1.5rem 0 0;
+  min-height: 250px;
+}
+
+/* Sticky banner in the free space beside a 820px article, only where there is room for it */
+.ad-rail-wrap {
+  position: fixed;
+  top: 6rem;
+  left: calc(50vw + 440px);
+  width: 180px;
+  z-index: 5;
+}
+
+.ad-rail-wrap .ad-slot {
+  margin: 0;
+}
+
+.ad-slot.ad-rail .ad-placeholder {
+  min-height: 600px;
+}

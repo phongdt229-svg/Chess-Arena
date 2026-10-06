@@ -11,6 +11,7 @@ interface AuthState {
   user: AuthUser | null;
   token: string | null;
   error: string | null;
+  errorDetail: string | null;
   busy: boolean;
   init: () => Promise<void>;
   login: (username: string, password: string) => Promise<boolean>;
@@ -37,6 +38,7 @@ function writeToken(token: string | null) {
 }
 
 const errorCode = (err: unknown) => (err instanceof authClient.AuthError ? err.code : 'SERVER_ERROR');
+const errorDetail = (err: unknown) => (err instanceof authClient.AuthError ? err.detail ?? null : null);
 
 export const useAuthStore = create<AuthState>((set, get) => {
   const submit = async (
@@ -44,14 +46,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     username: string,
     password: string,
   ): Promise<boolean> => {
-    set({ busy: true, error: null });
+    set({ busy: true, error: null, errorDetail: null });
     try {
       const { token, user } = await action(username, password);
       writeToken(token);
       set({ status: 'authed', user, token, busy: false });
       return true;
     } catch (err) {
-      set({ error: errorCode(err), busy: false });
+      set({ error: errorCode(err), errorDetail: errorDetail(err), busy: false });
       return false;
     }
   };
@@ -61,6 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     user: null,
     token: null,
     error: null,
+    errorDetail: null,
     busy: false,
 
     init: async () => {
@@ -100,6 +103,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    clearError: () => set({ error: null }),
+    clearError: () => set({ error: null, errorDetail: null }),
   };
 });

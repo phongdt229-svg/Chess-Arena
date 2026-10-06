@@ -23,26 +23,83 @@
   background-color: #baca44;
 }
 
-.square.legal-target {
-  background-color: rgba(32, 74, 135, 0.2);
-}
-
-.square.last-move {
-  background-color: rgba(240, 217, 181, 0.8);
+.square.last-move::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 235, 59, 0.38);
+  pointer-events: none;
 }
 
 .square.in-check {
-  background-color: #ff6b6b;
+  background-image: radial-gradient(circle, rgba(255, 0, 0, 0.9) 0%, rgba(231, 76, 60, 0.55) 45%, rgba(231, 76, 60, 0) 72%);
+}
+
+.square.legal-target.has-piece::after {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 4px rgba(32, 74, 135, 0.55);
+  pointer-events: none;
 }
 
 .legal-marker {
-  width: 25%;
-  height: 25%;
-  background-color: rgba(32, 74, 135, 0.8);
+  width: 28%;
+  height: 28%;
+  background-color: rgba(32, 74, 135, 0.55);
   border-radius: 50%;
   pointer-events: none;
 }
 
-.square:hover:not(.selected) {
-  background-color: rgba(32, 74, 135, 0.1);
+@media (hover: hover) {
+  .square:hover {
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.4);
+  }
+}
+
+.square:focus-visible {
+  outline: 3px solid #1e88e5;
+  outline-offset: -3px;
+  z-index: 6;
+}
+
+.sq-label {
+  position: absolute;
+  font-size: max(9px, 1.9cqw);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sq-label.rank {
+  top: 3%;
+  left: 4%;
+}
+
+.sq-label.file {
+  bottom: 3%;
+  right: 4%;
+}
+
+.square.light .sq-label {
+  color: #b58863;
+}
+
+.square.dark .sq-label {
+  color: #f0d9b5;
+}
+
+.square.hint-from,
+.square.hint-to {
+  box-shadow: inset 0 0 0 4px rgba(46, 160, 67, 0.95);
+}
+
+.square.hint-to::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(46, 160, 67, 0.28);
+  pointer-events: none;
 }

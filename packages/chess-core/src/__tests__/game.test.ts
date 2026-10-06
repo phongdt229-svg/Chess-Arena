@@ -143,3 +143,54 @@ describe('GameEngine', () => {
     });
   });
 });
+
+describe('snapshotAt', () => {
+  const play = (engine: GameEngine, ...ucis: string[]) => ucis.forEach((u) => engine.makeMove(u));
+
+  it('returns the start position at ply 0 and the live position at the last ply', () => {
+    const engine = GameEngine.create();
+    play(engine, 'e2e4', 'e7e5', 'g1f3');
+    const start = engine.snapshotAt(0)!;
+    expect(start.fen).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(start.lastMove).toBeNull();
+    const end = engine.snapshotAt(3)!;
+    expect(end.fen).toBe(engine.getFEN());
+    expect(end.lastMove).toEqual({ from: 6, to: 21 });
+  });
+
+  it('shows intermediate positions and the move that led to them, leaving the game untouched', () => {
+    const engine = GameEngine.create();
+    play(engine, 'e2e4', 'e7e5', 'g1f3');
+    const liveFen = engine.getFEN();
+    const afterE4 = engine.snapshotAt(1)!;
+    expect(afterE4.board[28]).toEqual({ type: 'p', color: 'w' });
+    expect(afterE4.board[12]).toBeNull();
+    expect(afterE4.lastMove).toEqual({ from: 12, to: 28 });
+    expect(engine.getFEN()).toBe(liveFen);
+    expect(engine.getHistory()).toHaveLength(3);
+  });
+
+  it('reports a king in check at that ply', () => {
+    const engine = GameEngine.create();
+    play(engine, 'f2f3', 'e7e5', 'g2g4', 'd8h4');
+    const mate = engine.snapshotAt(4)!;
+    expect(mate.inCheckSquare).toBe(4); // white king on e1
+    expect(engine.snapshotAt(3)!.inCheckSquare).toBeNull();
+  });
+
+  it('works for games that start from a custom position', () => {
+    const engine = GameEngine.create();
+    engine.loadFEN('8/P6k/8/8/8/8/8/K7 w - - 0 1');
+    play(engine, 'a1b1', 'h7g7');
+    expect(engine.snapshotAt(0)!.fen).toBe('8/P6k/8/8/8/8/8/K7 w - - 0 1');
+    expect(engine.snapshotAt(1)!.board[1]).toEqual({ type: 'k', color: 'w' });
+  });
+
+  it('rejects plies outside the game', () => {
+    const engine = GameEngine.create();
+    play(engine, 'e2e4');
+    expect(engine.snapshotAt(-1)).toBeNull();
+    expect(engine.snapshotAt(2)).toBeNull();
+    expect(engine.snapshotAt(0.5)).toBeNull();
+  });
+});

@@ -181,6 +181,8 @@ export default function Rules() {
       <p>
         Ready to try it? <Link to="/play">Start playing</Link> or look at some popular <Link to="/openings">openings</Link>.
       </p>
+
+      <AdSlot placement="bottom" />
     </div>
   );
 }

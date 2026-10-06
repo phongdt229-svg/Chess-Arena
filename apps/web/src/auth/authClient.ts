@@ -5,7 +5,7 @@ export interface AuthUser {
 }
 
 export class AuthError extends Error {
-  constructor(public code: string, public status: number) {
+  constructor(public code: string, public status: number, public detail?: string) {
     super(code);
   }
 }
@@ -23,14 +23,15 @@ async function call<T>(path: string, init: RequestInit, token?: string): Promise
     throw new AuthError('NETWORK', 0);
   }
 
-  let body: { ok?: boolean; data?: T; error?: string } | null = null;
+  let body: { ok?: boolean; data?: T; error?: string; detail?: string } | null = null;
   try {
     body = await res.json();
   } catch {
     // non-JSON response
   }
-  if (!res.ok || !body?.ok) {
-    throw new AuthError(body?.error ?? 'SERVER_ERROR', res.status);
+  if (!body) throw new AuthError('API_UNAVAILABLE', res.status, `HTTP ${res.status}`);
+  if (!res.ok || !body.ok) {
+    throw new AuthError(body.error ?? 'SERVER_ERROR', res.status, (body as { detail?: string }).detail);
   }
   return body.data as T;
 }

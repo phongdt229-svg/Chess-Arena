@@ -12,6 +12,9 @@ const ERROR_TEXT: Record<string, string> = {
   VALIDATION: 'Invalid details.',
   NETWORK: 'Could not reach the server. Please try again later.',
   SERVER_ERROR: 'Server error. Please try again later.',
+  CONFIG_MISSING: 'The server is not configured yet (database settings are missing).',
+  DB_UNAVAILABLE: 'The server cannot reach its database.',
+  API_UNAVAILABLE: 'The account service is not available on this server yet. Please try again later.',
 };
 
 function validate(tab: Tab, username: string, password: string, confirm: string): string | null {
@@ -30,7 +33,7 @@ function validate(tab: Tab, username: string, password: string, confirm: string)
 export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab }) {
   const { search } = useLocation();
   usePageMeta(initialTab === 'register' ? 'Sign up' : 'Log in');
-  const { login, register, busy, error, clearError } = useAuthStore();
+  const { login, register, busy, error, errorDetail, clearError } = useAuthStore();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -115,6 +118,7 @@ export default function AuthScreen({ initialTab = 'login' }: { initialTab?: Tab 
         {message && (
           <div className="auth-error" role="alert">
             {message}
+            {!localError && errorDetail && <small className="auth-error-detail">{errorDetail}</small>}
           </div>
         )}
 

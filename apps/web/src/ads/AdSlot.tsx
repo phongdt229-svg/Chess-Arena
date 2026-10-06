@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { adsEnabled, getAdsConfig, type AdPlacement } from './config';
+import { adsEnabled, getAdsConfig, slotFor, type AdPlacement } from './config';
 import { useConsentStore } from './consentStore';
 import './ads.css';
 
@@ -21,8 +21,7 @@ function loadScript(client: string) {
   document.head.appendChild(s);
 }
 
-function useMinWidth(px: number | null): boolean {
-  const query = px === null ? null : `(min-width: ${px}px)`;
+function useMedia(query: string | null): boolean {
   const [matches, setMatches] = useState(() => (query ? window.matchMedia(query).matches : true));
   useEffect(() => {
     if (!query) return;
@@ -35,18 +34,25 @@ function useMinWidth(px: number | null): boolean {
   return matches;
 }
 
+export const DESKTOP_QUERY = '(min-width: 1024px)';
+export const MOBILE_QUERY = '(max-width: 1023px)';
+export const RAIL_QUERY = '(min-width: 1380px)';
+
 interface AdSlotProps {
   placement: AdPlacement;
+  /** Only render when this media query matches (the ad script is not touched otherwise) */
+  media?: string;
   desktopOnly?: boolean;
+  mobileOnly?: boolean;
   className?: string;
 }
 
-export default function AdSlot({ placement, desktopOnly = false, className = '' }: AdSlotProps) {
+export default function AdSlot({ placement, media, desktopOnly = false, mobileOnly = false, className = '' }: AdSlotProps) {
   const consent = useConsentStore((s) => s.consent);
-  const wideEnough = useMinWidth(desktopOnly ? 1024 : null);
+  const wideEnough = useMedia(media ?? (desktopOnly ? DESKTOP_QUERY : mobileOnly ? MOBILE_QUERY : null));
   const insRef = useRef<HTMLModElement>(null);
   const config = getAdsConfig();
-  const slot = config.slots[placement];
+  const slot = slotFor(placement, config);
   const live = adsEnabled() && config.client !== null && slot !== null;
   const show = live && consent === 'granted' && wideEnough;
 

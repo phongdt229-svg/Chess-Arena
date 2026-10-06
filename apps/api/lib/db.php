@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/response.php';
+
 function db(): PDO
 {
     static $pdo = null;
@@ -8,12 +10,10 @@ function db(): PDO
         return $pdo;
     }
 
-    $configPath = dirname(__DIR__, 3) . '/config/config.php';
-    if (!is_file($configPath)) {
-        require_once __DIR__ . '/response.php';
-        json_fail('SERVER_ERROR', 500);
+    $config = app_config();
+    if (!isset($config['db_dsn'], $config['db_user'], $config['db_pass'])) {
+        json_fail('CONFIG_MISSING', 500);
     }
-    $config = require $configPath;
 
     try {
         $pdo = new PDO($config['db_dsn'], $config['db_user'], $config['db_pass'], [
@@ -22,9 +22,7 @@ function db(): PDO
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
     } catch (PDOException $e) {
-        error_log('DB connect failed: ' . $e->getMessage());
-        require_once __DIR__ . '/response.php';
-        json_fail('SERVER_ERROR', 500);
+        server_error($e, 'DB_UNAVAILABLE');
     }
     return $pdo;
 }

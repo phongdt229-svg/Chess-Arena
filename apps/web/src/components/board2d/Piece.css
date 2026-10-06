@@ -1,18 +1,21 @@
 .piece {
-  font-size: 3.5vw;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11cqw;
   line-height: 1;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.1s ease;
+  touch-action: none;
 }
 
 .piece:active {
   cursor: grabbing;
-}
-
-.piece:hover {
-  transform: scale(1.1);
 }
 
 .piece.white {
@@ -23,4 +26,43 @@
 .piece.black {
   color: #000000;
   text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.piece.slide {
+  z-index: 5;
+  animation: piece-slide 190ms ease-out;
+}
+
+.piece.dragging {
+  opacity: 0.25;
+}
+
+@keyframes piece-slide {
+  from {
+    transform: translate(calc(var(--dx) * 100%), calc(var(--dy) * 100%));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece.slide {
+    animation: none;
+  }
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+/* A square is 12.5cqw wide; on phones the glyph is allowed to fill almost all of it */
+@container (max-width: 520px) {
+  .piece {
+    font-size: 13.2cqw;
+  }
 }
